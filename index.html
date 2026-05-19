@@ -142,6 +142,41 @@
     <div id="checkpoint-popup" class="hidden">CHECKPOINT SAVED ✓</div>
   </div>
 
+  <!--
+    ╔══════════════════════════════════════════════════════╗
+    ║  ASSETS — urutan load penting (dependencies dulu)   ║
+    ╠══════════════════════════════════════════════════════╣
+    ║  game.js          ← engine utama (canvas, PAL, G,   ║
+    ║                      Particles, helpers, game loop) ║
+    ║  assets/map/      ← TileMap, Camera, levels         ║
+    ║  assets/obstacles/← Spike, FallingSpike, Saw        ║
+    ║  assets/objects/  ← Coin, Platform, Checkpoint, dll ║
+    ║  assets/characters← Player, Boss                    ║
+    ║  assets/ui/       ← HUD, Screens                    ║
+    ╚══════════════════════════════════════════════════════╝
+  -->
+
+  <!-- 1. Engine utama: canvas, konstanta, PAL, G, Particles, helpers -->
   <script src="game.js"></script>
+
+  <!-- 2. Map: TileMap, Camera, drawTiles, drawBackground -->
+  <script src="assets/map/tilemap.js"></script>
+
+  <!-- 3. Level definitions (butuh helper dari tilemap.js) -->
+  <script src="assets/map/levels.js"></script>
+
+  <!-- 4. Obstacles: Spike, FallingSpike, Saw -->
+  <script src="assets/obstacles/obstacles.js"></script>
+
+  <!-- 5. Objects: Coin, MovingPlatform, Checkpoint, BossGate, Portal -->
+  <script src="assets/objects/objects.js"></script>
+
+  <!-- 6. Characters: Player, Boss (butuh PAL, LEVELS, TILE, dll) -->
+  <script src="assets/characters/player.js"></script>
+  <script src="assets/characters/boss.js"></script>
+
+  <!-- 7. UI: HUD canvas + HTML, Screens + Stage Select -->
+  <script src="assets/ui/hud.js"></script>
+  <script src="assets/ui/screens.js"></script>
 </body>
 </html>
