@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Punch Guy</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrapper">
+    <!-- SCREENS -->
+    <div id="screen-title" class="screen active">
+      <div class="title-bg"></div>
+      <div class="title-content">
+        <div class="title-logo">
+          <span class="title-shadow">THE</span>
+          <span class="title-blade">PUNCH</span>
+          <span class="title-chronicles">G U Y</span>
+        </div>
+        <div class="title-subtitle">A Pixel RPG Adventure</div>
+        <button id="btn-start" class="pixel-btn">▶ START GAME</button>
+        <button id="btn-how" class="pixel-btn secondary">? HOW TO PLAY</button>
+        <div class="title-version">v1.0 — Shadow Realm Edition</div>
+      </div>
+      <div class="title-particles" id="title-particles"></div>
+    </div>
+
+    <div id="screen-howto" class="screen">
+      <div class="howto-box">
+        <h2 class="howto-title">⚔ HOW TO PLAY</h2>
+        <div class="howto-grid">
+          <div class="howto-item"><span class="key">A / ←</span><span>Move Left</span></div>
+          <div class="howto-item"><span class="key">D / →</span><span>Move Right</span></div>
+          <div class="howto-item"><span class="key">W / ↑ / Space</span><span>Jump</span></div>
+          <div class="howto-item"><span class="key">Left Click / J / Z</span><span>Attack</span></div>
+          <div class="howto-item"><span class="key">K / X</span><span>Double Jump</span></div>
+          <div class="howto-item"><span class="key">Shift</span><span>Dodge (Avoid Attacks!)</span></div>
+          <div class="howto-item"><span class="key">ESC</span><span>Pause</span></div>
+        </div>
+        <div class="howto-tips">
+          <div class="tip">💀 Avoid <b>spikes</b> — they reduce 25 HP and can cost you a life!</div>
+          <div class="tip">🕳 Don't fall into <b>pits</b> — same as spikes!</div>
+          <div class="tip">🏁 Touch <b>yellow checkpoints</b> to save progress</div>
+          <div class="tip">⚔ <b>Boss</b> attacks reduce 25 HP each hit</div>
+          <div class="tip">❤ You have <b>100 HP per life</b> and <b>3 lives</b> total — game over at 0!</div>
+          <div class="tip">⏱ Use <b>Shift Dodge</b> to avoid attacks and stay safe!</div>
+          <div class="tip">🪙 Collect <b>coins</b> for bonus score!</div>
+        </div>
+        <button id="btn-back" class="pixel-btn secondary">← BACK</button>
+      </div>
+    </div>
+
+    <div id="screen-game" class="screen">
+      <div id="hud">
+        <div id="hud-left">
+          <div id="hud-level">LEVEL <span id="hud-level-num">1</span></div>
+          <div id="hud-lives"></div>
+        </div>
+        <div id="hud-center">
+          <div id="hud-boss-bar" class="hidden">
+            <div class="boss-label" id="boss-name-label">BOSS</div>
+            <div class="boss-bar-outer"><div id="boss-bar-inner"></div></div>
+          </div>
+        </div>
+        <div id="hud-right">
+          <div id="hud-score">SCORE: <span id="hud-score-num">0</span></div>
+          <div id="hud-coins">🪙 <span id="hud-coin-num">0</span></div>
+          <div id="hud-time">Waktu: 1:30</div>
+        </div>
+      </div>
+      <canvas id="game-canvas"></canvas>
+      <div id="pause-overlay" class="hidden">
+        <div class="pause-box">
+          <div class="pause-title">⏸ PAUSED</div>
+          <button id="btn-resume" class="pixel-btn">▶ RESUME</button>
+          <button id="btn-menu" class="pixel-btn secondary">⌂ MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-gameover" class="screen">
+      <div class="gameover-box">
+        <div class="gameover-skull">☠</div>
+        <div class="gameover-title">GAME OVER</div>
+        <div class="gameover-score">Score: <span id="go-score">0</span></div>
+        <button id="btn-retry" class="pixel-btn">↺ RETRY</button>
+        <button id="btn-go-menu" class="pixel-btn secondary">⌂ MENU</button>
+      </div>
+    </div>
+
+    <div id="screen-levelclear" class="screen">
+      <div class="clear-box">
+        <div class="clear-title">LEVEL CLEAR!</div>
+        <div class="clear-star-row">
+          <span id="lc-stars">☆☆☆</span>
+          <span id="lc-star-count">0/3</span>
+        </div>
+        <div class="clear-score">Score: <span id="lc-score">0</span></div>
+        <div class="clear-coins">Coins: <span id="lc-coins">0</span></div>
+        <div class="clear-conditions">
+          <div class="clear-condition" id="lc-cond-time">⏱ Waktu di bawah 1:30: -</div>
+          <div class="clear-condition" id="lc-cond-coins">🪙 Kumpulkan semua koin: -</div>
+          <div class="clear-condition" id="lc-cond-perfect">❤ Nyawa penuh tanpa mati: -</div>
+        </div>
+        <button id="btn-nextlevel" class="pixel-btn">NEXT LEVEL ▶</button>
+      </div>
+    </div>
+
+    <div id="screen-victory" class="screen">
+      <div class="victory-box">
+        <div class="victory-crown">👑</div>
+        <div class="victory-title">YOU WIN!</div>
+        <div class="victory-sub">All Bosses Defeated!</div>
+        <div class="victory-score">Final Score: <span id="vic-score">0</span></div>
+        <button id="btn-vic-menu" class="pixel-btn">⌂ MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- Damage flash overlay -->
+    <div id="damage-flash"></div>
+    <!-- Checkpoint popup -->
+    <div id="checkpoint-popup" class="hidden">CHECKPOINT SAVED ✓</div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
