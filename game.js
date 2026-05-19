@@ -67,7 +67,153 @@ let G = {
 // B=boss trigger zone
 // 'c'=cloud-platform, 'w'=water, 'h'=hanging-spike(down)
 
-const LEVELS = [
+// Catatan:
+// Stage 1–3 ditulis manual (lebih detail). Stage 4–10 digenerate agar game punya 10 stage.
+function _row(w, ch='0') { return ch.repeat(w); }
+function _rowWithSegments(w, baseCh, segments) {
+  const arr = Array(w).fill(baseCh);
+  for (const seg of (segments || [])) {
+    const x0 = Math.max(0, Math.min(w - 1, seg.x | 0));
+    const len = Math.max(0, seg.len | 0);
+    for (let i = x0; i < Math.min(w, x0 + len); i++) arr[i] = seg.ch;
+  }
+  return arr.join('');
+}
+
+function _clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+function makeStageData(width, theme, stageNum) {
+  const H = 22;
+  const floorRow = 11;
+
+  // Pits deterministik (hindari area start & area boss/portal)
+  const pits = [];
+  const safeLeft = 8;
+  const safeRight = width - 16;
+  const addPit = (x, len) => {
+    x = _clamp(x, safeLeft, safeRight);
+    len = _clamp(len, 2, 6);
+    pits.push({ x, len });
+  };
+  addPit(14 + stageNum * 2, 3);
+  addPit(30 + (stageNum % 4) * 3, 4);
+  addPit(48 + (stageNum % 3) * 4, 3);
+
+  const groundSegs = pits.map(p => ({ x: p.x, len: p.len, ch: '9' }));
+
+  // Platform tile kecil (solid) untuk variasi lompatan
+  const p1 = [{ x: 10 + (stageNum % 5) * 2, len: 5, ch: '2' }, { x: 26 + (stageNum % 4) * 3, len: 6, ch: '2' }];
+  const p2 = [{ x: 18 + (stageNum % 6) * 2, len: 6, ch: '2' }, { x: 40 + (stageNum % 5) * 3, len: 5, ch: '2' }];
+  const p3 = [{ x: 34 + (stageNum % 4) * 2, len: 5, ch: '2' }, { x: 54 + (stageNum % 3) * 2, len: 4, ch: '2' }];
+
+  const rows = [];
+  for (let r = 0; r < H; r++) {
+    if (r < 4) rows.push(_row(width, '0'));
+    else if (r === 6) rows.push(_rowWithSegments(width, '0', p1));
+    else if (r === 8) rows.push(_rowWithSegments(width, '0', p2));
+    else if (r === 10) rows.push(_rowWithSegments(width, '0', p3));
+    else if (r === floorRow) rows.push(_rowWithSegments(width, '1', groundSegs));
+    else if (r === floorRow + 1) {
+      // Di stage lava, lapisan bawah jadi lava biar terasa berbahaya
+      rows.push(_row(width, theme === 'abyss' ? '7' : '1'));
+    } else if (theme === 'abyss' && r === floorRow + 2) {
+      rows.push(_row(width, '7'));
+    } else if (r > floorRow + 1) {
+      rows.push(_row(width, '3'));
+    } else {
+      rows.push(_row(width, '0'));
+    }
+  }
+  return rows;
+}
+
+function makeStageObjects(width, stageNum) {
+  const floorRow = 11;
+  const objs = [];
+
+  // Coins (pakai pola zig-zag)
+  const coinCount = 14 + stageNum; // makin tinggi stage makin banyak
+  for (let i = 0; i < coinCount; i++) {
+    const x = 6 + (i * 5 + stageNum) % (width - 18);
+    const y = (i % 3 === 0) ? 3 : ((i % 3 === 1) ? 5 : 7);
+    objs.push({ type: 'coin', x, y });
+  }
+
+  // Spikes di lantai
+  const spikeY = floorRow;
+  const spikeBases = [12, 22, 36, 46, 58].map(v => v + (stageNum % 3) * 2);
+  spikeBases.forEach((sx, idx) => {
+    if (sx > 8 && sx < width - 16) {
+      const n = 2 + (idx % 2);
+      for (let k = 0; k < n; k++) objs.push({ type: 'spike', x: sx + k, y: spikeY });
+    }
+  });
+
+  // Hanging spikes
+  const hs = [18, 33, 50].map(v => v + (stageNum % 4));
+  hs.forEach(x => { if (x > 10 && x < width - 16) objs.push({ type: 'hspike', x, y: 8 }); });
+
+  // Saw blades
+  const sawCount = 1 + Math.floor(stageNum / 2);
+  for (let i = 0; i < sawCount; i++) {
+    const x = 16 + i * 14 + (stageNum % 5);
+    if (x < width - 16) objs.push({ type: 'saw', x, y: spikeY, range: 3 + (stageNum % 3), speed: 2 + stageNum * 0.15, axis: 'x' });
+  }
+
+  // Falling spikes (mulai muncul dari stage 5)
+  if (stageNum >= 5) {
+    objs.push({ type: 'fallingspike', x: 30 + (stageNum % 7), y: 2, period: Math.max(45, 120 - stageNum * 6) });
+    objs.push({ type: 'fallingspike', x: 48 + (stageNum % 9), y: 2, period: Math.max(40, 100 - stageNum * 5) });
+  }
+
+  // Checkpoints
+  objs.push({ type: 'checkpoint', x: Math.floor(width * 0.33), y: floorRow - 1 });
+  objs.push({ type: 'checkpoint', x: Math.floor(width * 0.66), y: floorRow - 1 });
+
+  // Moving platforms
+  objs.push({ type: 'mplatform', x: Math.floor(width * 0.40), y: 9, range: 4 + (stageNum % 3), speed: 1.6 + stageNum * 0.12 });
+  objs.push({ type: 'mplatform', x: Math.floor(width * 0.55), y: 7, range: 3 + (stageNum % 4), speed: 1.8 + stageNum * 0.14 });
+
+  // Boss gate + portal
+  objs.push({ type: 'bossgate', x: width - 11, y: floorRow - 1 });
+  objs.push({ type: 'portal', x: width - 3, y: floorRow - 1 });
+
+  return objs;
+}
+
+function generateExtraLevels(startStage, endStage) {
+  const out = [];
+  const themes = ['forest', 'citadel', 'abyss'];
+  const bossNames = ['Shadow Knight', 'Phantom Warlord', 'Inferno Reaper'];
+  for (let stage = startStage; stage <= endStage; stage++) {
+    const theme = themes[(stage - 1) % themes.length];
+    const themeName = theme === 'forest' ? 'Dark Forest' : (theme === 'citadel' ? 'Stone Citadel' : 'Lava Abyss');
+    const width = 68 + stage * 2; // sedikit lebih panjang tiap stage
+    const bossId = (stage - 1) % 3;
+    const bossHp = 60 + stage * 18 + bossId * 10;
+
+    out.push({
+      name: `Stage ${stage} — ${themeName}`,
+      bossName: `⚔ ${bossNames[bossId]}`,
+      bossMaxHp: bossHp,
+      bgColor: theme === 'forest'
+        ? ['#12122a', '#1a1a38']
+        : (theme === 'citadel'
+          ? ['#0e0e20', '#1a0a2e']
+          : ['#1a0808', '#0e0404']),
+      width,
+      height: 22,
+      music: theme,
+      data: makeStageData(width, theme, stage),
+      objects: makeStageObjects(width, stage),
+      playerStart: { x: 3, y: 3 },
+      boss: { x: width - 4, y: 9, hp: bossHp, phase: 0, id: bossId },
+    });
+  }
+  return out;
+}
+
+const BASE_LEVELS = [
   /* ─── LEVEL 1: THE DARK FOREST ─────────────────────────── */
   {
     name: 'The Dark Forest',
@@ -289,6 +435,9 @@ const LEVELS = [
     boss:{x:69,y:9,hp:150,phase:0,id:2}
   }
 ];
+
+// Stage 1–10
+const LEVELS = [...BASE_LEVELS, ...generateExtraLevels(4, 10)];
 
 // ─── TILEMAP CLASS ──────────────────────────────────────────
 class TileMap {
