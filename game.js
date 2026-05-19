@@ -1640,6 +1640,94 @@ class Portal {
 let currentLevel = {};
 let player;
 
+// ─── STAGE UNLOCK / PROGRESS ─────────────────────────────────
+const UNLOCK_STARS_REQUIRED = 2; // syarat unlock stage berikutnya
+const PROGRESS_KEY = 'the_punch_guy_progress_v1';
+
+function defaultProgress() {
+  return {
+    // bestStars[i] = bintang terbaik untuk stage (0..3)
+    bestStars: Array(LEVELS.length).fill(0),
+  };
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return defaultProgress();
+    const p = JSON.parse(raw);
+    if (!p || !Array.isArray(p.bestStars)) return defaultProgress();
+    // Pastikan panjang array cocok dengan jumlah LEVELS
+    if (p.bestStars.length < LEVELS.length) {
+      p.bestStars = p.bestStars.concat(Array(LEVELS.length - p.bestStars.length).fill(0));
+    } else if (p.bestStars.length > LEVELS.length) {
+      p.bestStars = p.bestStars.slice(0, LEVELS.length);
+    }
+    return p;
+  } catch {
+    return defaultProgress();
+  }
+}
+
+function saveProgress(p) {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch {}
+}
+
+function resetProgress() {
+  saveProgress(defaultProgress());
+}
+
+function isStageUnlocked(stageIdx0) {
+  if (stageIdx0 <= 0) return true; // stage 1 selalu terbuka
+  const p = loadProgress();
+  return (p.bestStars[stageIdx0 - 1] || 0) >= UNLOCK_STARS_REQUIRED;
+}
+
+function renderStageSelect() {
+  const grid = document.getElementById('stages-grid');
+  if (!grid) return;
+  const p = loadProgress();
+  grid.innerHTML = '';
+
+  for (let i = 0; i < LEVELS.length; i++) {
+    const stageNum = i + 1;
+    const best = p.bestStars[i] || 0;
+    const unlocked = isStageUnlocked(i);
+
+    const card = document.createElement('div');
+    card.className = 'stage-card' + (unlocked ? '' : ' locked');
+    card.setAttribute('data-stage', String(i));
+
+    const num = document.createElement('div');
+    num.className = 'stage-num';
+    num.textContent = `STAGE ${stageNum}`;
+
+    const name = document.createElement('div');
+    name.className = 'stage-name';
+    name.textContent = LEVELS[i].name || `Stage ${stageNum}`;
+
+    const stars = document.createElement('div');
+    stars.className = 'stage-stars';
+    stars.textContent = '★'.repeat(best) + '☆'.repeat(3 - best);
+
+    const lock = document.createElement('div');
+    lock.className = 'stage-lock';
+    lock.textContent = unlocked ? '' : `🔒 butuh ${UNLOCK_STARS_REQUIRED}★`;
+
+    card.appendChild(num);
+    card.appendChild(name);
+    card.appendChild(stars);
+    if (!unlocked) card.appendChild(lock);
+
+    card.addEventListener('click', () => {
+      if (!unlocked) return;
+      startLevel(i);
+    });
+
+    grid.appendChild(card);
+  }
+}
+
 function initLevel(levelIdx) {
   G.currentLevel = levelIdx;
   const def = LEVELS[levelIdx];
@@ -2063,6 +2151,25 @@ function renderLevelClearStars() {
 }
 
 function nextLevel() {
+  // Simpan bintang stage yang baru selesai (best)
+  const stars = computeLevelStars();
+  const p = loadProgress();
+  p.bestStars[G.currentLevel] = Math.max(p.bestStars[G.currentLevel] || 0, stars.total);
+  saveProgress(p);
+
+  // Update tombol Next Level (harus memenuhi syarat unlock)
+  const nextIdx = G.currentLevel + 1;
+  const canUnlockNext = (stars.total >= UNLOCK_STARS_REQUIRED);
+  const canGoNext = nextIdx < LEVELS.length && canUnlockNext;
+  const btnNext = document.getElementById('btn-nextlevel');
+  const lockNote = document.getElementById('lc-lock-note');
+  if (btnNext) {
+    btnNext.disabled = !canGoNext;
+    btnNext.classList.toggle('danger', !canGoNext);
+    btnNext.textContent = canGoNext ? 'NEXT LEVEL ▶' : 'STAGE TERKUNCI';
+  }
+  if (lockNote) lockNote.classList.toggle('hidden', canGoNext || nextIdx >= LEVELS.length);
+
   if (G.currentLevel + 1 >= LEVELS.length) {
     // Victory!
     G.running = false;
@@ -2108,6 +2215,7 @@ function showScreen(name) {
   const map = {
     title: 'screen-title',
     howto: 'screen-howto',
+    stages: 'screen-stages',
     game:  'screen-game',
     gameover: 'screen-gameover',
     levelclear: 'screen-levelclear',
@@ -2116,6 +2224,7 @@ function showScreen(name) {
   const el = document.getElementById(map[name]);
   if (el) { el.classList.add('active'); el.style.display = 'flex'; }
   if (name === 'levelclear') renderLevelClearStars();
+  if (name === 'stages') renderStageSelect();
 }
 
 // ─── TITLE PARTICLES ─────────────────────────────────────────
@@ -2164,10 +2273,17 @@ window.addEventListener('resize', () => {
 });
 
 // ─── UI BINDINGS ─────────────────────────────────────────────
-document.getElementById('btn-start').addEventListener('click', startGame);
+// START membuka Stage Select (bukan langsung main)
+document.getElementById('btn-start').addEventListener('click', () => showScreen('stages'));
 
 document.getElementById('btn-how').addEventListener('click', () => showScreen('howto'));
 document.getElementById('btn-back').addEventListener('click', () => showScreen('title'));
+
+document.getElementById('btn-stages-back').addEventListener('click', () => showScreen('title'));
+document.getElementById('btn-stages-reset').addEventListener('click', () => {
+  resetProgress();
+  renderStageSelect();
+});
 
 document.getElementById('btn-resume').addEventListener('click', () => {
   G.paused = false;
@@ -2192,9 +2308,14 @@ document.getElementById('btn-go-menu').addEventListener('click', () => {
 });
 
 document.getElementById('btn-nextlevel').addEventListener('click', () => {
+  // Hanya boleh lanjut jika stage sebelumnya dapat minimal bintang
+  const stars = computeLevelStars();
+  if (stars.total < UNLOCK_STARS_REQUIRED) return;
   startLevel(G.currentLevel + 1);
 });
 
+document.getElementById('btn-stage-select').addEventListener('click', () => showScreen('stages'));
+document.getElementById('btn-vic-stages').addEventListener('click', () => showScreen('stages'));
 document.getElementById('btn-vic-menu').addEventListener('click', () => showScreen('title'));
 
 document.getElementById('go-score').textContent = 0;

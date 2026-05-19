@@ -146,6 +146,11 @@ html, body {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0 #8a6e00;
 }
+.pixel-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
 .pixel-btn.secondary {
   color: var(--col-dim);
   border-color: var(--col-border);
@@ -291,6 +296,116 @@ html, body {
   transition: width 0.2s;
 }
 .hidden { display: none !important; }
+
+/* ============================================================
+   STAGE SELECT
+   ============================================================ */
+#screen-stages { background: rgba(0,0,0,0.92); }
+.stages-box {
+  background: var(--col-panel);
+  border: 3px solid var(--col-border);
+  padding: 28px 28px 22px;
+  width: min(900px, 92vw);
+  box-shadow: 8px 8px 0 #000;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.stages-header { text-align: center; }
+.stages-title {
+  font-size: clamp(14px, 2.2vw, 22px);
+  color: var(--col-gold);
+  text-shadow: 2px 2px 0 #8a6e00;
+}
+.stages-sub {
+  margin-top: 8px;
+  font-family: var(--vt);
+  font-size: 18px;
+  color: var(--col-dim);
+}
+.stages-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .stages-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+}
+.stage-card {
+  background: var(--col-dark);
+  border: 2px solid var(--col-border);
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #111;
+  user-select: none;
+  transition: transform 0.08s, background 0.08s, border-color 0.08s;
+}
+.stage-card:hover {
+  transform: translate(-2px, -2px);
+  border-color: var(--col-gold);
+}
+.stage-card:active {
+  transform: translate(1px, 1px);
+}
+.stage-num {
+  font-size: 18px;
+  color: var(--col-text);
+}
+.stage-name {
+  font-family: var(--vt);
+  font-size: 18px;
+  color: var(--col-dim);
+  letter-spacing: 1px;
+}
+.stage-stars {
+  font-size: 18px;
+  color: var(--col-gold);
+  letter-spacing: 3px;
+}
+.stage-lock {
+  font-family: var(--vt);
+  font-size: 18px;
+  color: var(--col-red);
+}
+.stage-card.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+.stage-card.locked:hover {
+  transform: none;
+  border-color: var(--col-border);
+}
+.stages-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.pixel-btn.danger {
+  color: #fff;
+  border-color: var(--col-red);
+  box-shadow: 4px 4px 0 #6a0000;
+}
+.pixel-btn.danger:hover {
+  background: var(--col-red);
+  color: #0a0a14;
+  box-shadow: 6px 6px 0 #6a0000;
+}
+
+/* Level clear extra note */
+.lock-note {
+  font-family: var(--vt);
+  font-size: 18px;
+  color: var(--col-red);
+  text-align: center;
+  margin-top: 6px;
+}
 
 /* Canvas */
 #game-canvas {

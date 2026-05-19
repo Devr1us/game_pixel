@@ -50,6 +50,23 @@
       </div>
     </div>
 
+    <!-- STAGE SELECT -->
+    <div id="screen-stages" class="screen">
+      <div class="stages-box">
+        <div class="stages-header">
+          <h2 class="stages-title">PILIH STAGE</h2>
+          <div class="stages-sub">Butuh <b>2 bintang</b> untuk membuka stage berikutnya</div>
+        </div>
+
+        <div id="stages-grid" class="stages-grid"></div>
+
+        <div class="stages-actions">
+          <button id="btn-stages-back" class="pixel-btn secondary">← MENU</button>
+          <button id="btn-stages-reset" class="pixel-btn danger">RESET PROGRESS</button>
+        </div>
+      </div>
+    </div>
+
     <div id="screen-game" class="screen">
       <div id="hud">
         <div id="hud-left">
@@ -102,7 +119,9 @@
           <div class="clear-condition" id="lc-cond-coins">🪙 Kumpulkan semua koin: -</div>
           <div class="clear-condition" id="lc-cond-perfect">❤ Nyawa penuh tanpa mati: -</div>
         </div>
+        <div class="clear-condition lock-note hidden" id="lc-lock-note">🔒 Stage berikutnya terkunci — butuh minimal 2 bintang di stage ini.</div>
         <button id="btn-nextlevel" class="pixel-btn">NEXT LEVEL ▶</button>
+        <button id="btn-stage-select" class="pixel-btn secondary">STAGE SELECT</button>
       </div>
     </div>
 
@@ -112,6 +131,7 @@
         <div class="victory-title">YOU WIN!</div>
         <div class="victory-sub">All Bosses Defeated!</div>
         <div class="victory-score">Final Score: <span id="vic-score">0</span></div>
+        <button id="btn-vic-stages" class="pixel-btn">STAGE SELECT</button>
         <button id="btn-vic-menu" class="pixel-btn">⌂ MAIN MENU</button>
       </div>
     </div>
