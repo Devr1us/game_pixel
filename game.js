@@ -54,6 +54,81 @@ function resizeCanvas() {
 
 resizeCanvas();
 
+// ─── AUDIO SYSTEM ───────────────────────────────────────────
+const Audio = {
+  titleMusic: document.getElementById('music-title'),
+  gameMusic: document.getElementById('music-game'),
+  toggle: document.getElementById('music-toggle'),
+  muted: localStorage.getItem('game-music-muted') === 'true',
+  
+  init() {
+    if (!this.toggle) return; // Graceful fallback jika audio tidak ada
+    this.setMuted(this.muted);
+    this.toggle.addEventListener('click', () => this.toggleMute());
+    if (this.titleMusic) this.titleMusic.volume = 0.4;
+    if (this.gameMusic) this.gameMusic.volume = 0.4;
+    this.playTitle();
+  },
+  
+  playTitle() {
+    if (!this.titleMusic || !this.gameMusic) return;
+    this.gameMusic.pause();
+    this.gameMusic.currentTime = 0;
+    if (!this.muted) {
+      this.titleMusic.play().catch(() => {});
+    }
+  },
+  
+  playGame() {
+    if (!this.titleMusic || !this.gameMusic) return;
+    this.titleMusic.pause();
+    this.titleMusic.currentTime = 0;
+    if (!this.muted) {
+      this.gameMusic.play().catch(() => {});
+    }
+  },
+  
+  stop() {
+    if (this.titleMusic) {
+      this.titleMusic.pause();
+      this.titleMusic.currentTime = 0;
+    }
+    if (this.gameMusic) {
+      this.gameMusic.pause();
+      this.gameMusic.currentTime = 0;
+    }
+  },
+  
+  setMuted(muted) {
+    if (!this.toggle) return;
+    this.muted = muted;
+    localStorage.setItem('game-music-muted', muted);
+    
+    if (muted) {
+      if (this.titleMusic) this.titleMusic.muted = true;
+      if (this.gameMusic) this.gameMusic.muted = true;
+      this.toggle.classList.add('muted');
+      this.toggle.textContent = '🔇';
+    } else {
+      if (this.titleMusic) this.titleMusic.muted = false;
+      if (this.gameMusic) this.gameMusic.muted = false;
+      this.toggle.classList.remove('muted');
+      this.toggle.textContent = '🔊';
+      
+      // Resume playback jika ada audio yang sudah di-pause
+      if (document.querySelector('.screen.active') === document.getElementById('screen-title')) {
+        this.playTitle();
+      } else if (document.querySelector('.screen.active') === document.getElementById('screen-game')) {
+        this.playGame();
+      }
+    }
+  },
+  
+  toggleMute() {
+    this.setMuted(!this.muted);
+  }
+};
+
 // ─── PALETTE ────────────────────────────────────────────────
 const PAL = {
   sky1: '#1a1a3e', sky2: '#0a0a1e',
@@ -404,4 +479,5 @@ function _bindUIAndBoot() {
 
   spawnTitleParticles();
   showScreen('title');
+  Audio.init();
 }

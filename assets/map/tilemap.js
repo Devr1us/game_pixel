@@ -4,14 +4,6 @@
    Tile legend:
      0=air, 1=ground, 2=platform, 3=stone,
      7=lava, 9=pit(void), c=cloud-platform
-
-   CATATAN ZOOM:
-   - Camera.zoom dihitung di Camera.init()
-   - ctx.scale(zoom, zoom) diterapkan di game loop (game.js)
-     sebelum drawTiles/drawObjects/player/boss
-   - Semua koordinat di sini adalah koordinat WORLD (sebelum zoom)
-   - Camera.toScreen() mengembalikan koordinat world-space (tanpa zoom)
-     karena zoom sudah ditangani oleh ctx.scale
    ============================================================ */
 
 'use strict';
@@ -59,27 +51,31 @@ class TileMap {
   pixelHeight() { return this.rowCount * this.tileH; }
 }
 
-// ─── CAMERA ─────────────────────────────────────────────────
-// zoom: skala render — dihitung agar seluruh tinggi map muat di layar
-// ctx.scale(zoom, zoom) diterapkan di game loop sebelum draw world
+// ─── CAMERA (dengan zoom fleksibel) ─────────────────────────
+// zoom: skala render — 1.0 = normal, <1 = zoom out (lebih banyak terlihat)
 const Camera = {
   x: 0, y: 0,
   W: 0, H: 0,
-  zoom: 1,
-  viewW: 0, viewH: 0,
   maxX: 0, maxY: 0,
+  zoom: 1,        // skala render canvas
+  mapW: 0, mapH: 0,
 
   init(mapW, mapH) {
-    this.W = GAME_W;
-    this.H = GAME_H;
+    this.mapW = mapW;
+    this.mapH = mapH;
+    this.W    = GAME_W;
+    this.H    = GAME_H;
 
-    // Zoom agar seluruh tinggi map muat di layar (landscape)
-    // Tidak melebihi 1 (tidak zoom in melebihi ukuran asli)
+    // Hitung zoom agar seluruh tinggi peta muat di layar
+    // Prioritas: semua baris vertikal terlihat, lebar scroll horizontal
     const zoomByH = GAME_H / mapH;
     const zoomByW = GAME_W / mapW;
+
+    // Pakai zoom yang lebih besar dari keduanya agar semua terlihat,
+    // tapi tidak lebih dari 1 (tidak zoom in melebihi ukuran asli)
     this.zoom = Math.min(1, Math.max(zoomByH, zoomByW));
 
-    // Ukuran area world yang terlihat
+    // Ukuran dunia yang terlihat dalam koordinat world
     this.viewW = GAME_W / this.zoom;
     this.viewH = GAME_H / this.zoom;
 
@@ -94,16 +90,21 @@ const Camera = {
     this.y += (Math.min(Math.max(ty, 0), this.maxY) - this.y) * CAM_LERP;
   },
 
-  // Konversi world → screen dalam koordinat world-space
-  // (zoom ditangani oleh ctx.scale di game loop)
+  // Konversi koordinat world → screen (dengan zoom)
   toScreen(wx, wy) {
-    return { x: wx - this.x, y: wy - this.y };
+    return {
+      x: (wx - this.x) * this.zoom,
+      y: (wy - this.y) * this.zoom,
+    };
   },
 
   inView(wx, wy, w, h) {
     return wx + w > this.x && wx < this.x + this.viewW &&
            wy + h > this.y && wy < this.y + this.viewH;
   },
+
+  // Ukuran tile setelah zoom
+  get tileSize() { return TILE * this.zoom; },
 };
 
 // ─── BACKGROUND GENERATION ───────────────────────────────────
@@ -136,7 +137,6 @@ function generateClouds(n, mapW) {
 }
 
 // ─── DRAW BACKGROUND ─────────────────────────────────────────
-// Background digambar di luar ctx.scale (koordinat layar langsung)
 function drawBackground() {
   const def = currentLevel.def;
   const [bg1, bg2] = def.bgColor;
@@ -146,7 +146,7 @@ function drawBackground() {
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, GAME_W, GAME_H);
 
-  // Stars (koordinat layar, parallax ringan)
+  // Stars (parallax, tidak terpengaruh zoom)
   currentLevel.bgStars.forEach(s => {
     const sx    = s.x * GAME_W - Camera.x * 0.05 * Camera.zoom;
     const sy    = s.y * GAME_H;
@@ -157,7 +157,7 @@ function drawBackground() {
   });
   ctx.globalAlpha = 1;
 
-  // Clouds (koordinat layar, parallax)
+  // Clouds (parallax)
   currentLevel.bgClouds.forEach(c => {
     const cx = (c.x - Camera.x * c.parallax) * Camera.zoom;
     const cy = (c.y - Camera.y * 0.05) * Camera.zoom;
@@ -172,8 +172,10 @@ function drawBackground() {
 }
 
 // ─── DRAW TILEMAP ─────────────────────────────────────────────
-// Dipanggil di dalam ctx.scale(zoom, zoom) — koordinat world-space
 function drawTiles(map) {
+  const z  = Camera.zoom;
+  const ts = TILE * z; // ukuran tile di layar
+
   const startCol = Math.max(0, Math.floor(Camera.x / TILE));
   const endCol   = Math.min(map.cols - 1, Math.ceil((Camera.x + Camera.viewW) / TILE));
   const startRow = Math.max(0, Math.floor(Camera.y / TILE));
@@ -182,58 +184,58 @@ function drawTiles(map) {
   for (let r = startRow; r <= endRow; r++) {
     for (let c = startCol; c <= endCol; c++) {
       const t  = map.get(c, r);
-      const sx = c * TILE - Camera.x;
-      const sy = r * TILE - Camera.y;
+      const sx = (c * TILE - Camera.x) * z;
+      const sy = (r * TILE - Camera.y) * z;
 
       if (t === '1') {
         // Grass ground
         ctx.fillStyle = PAL.ground;
-        ctx.fillRect(sx, sy + 6, TILE, TILE - 6);
+        ctx.fillRect(sx, sy + 6 * z, ts, ts - 6 * z);
         ctx.fillStyle = PAL.groundTop;
-        ctx.fillRect(sx, sy, TILE, 7);
+        ctx.fillRect(sx, sy, ts, 7 * z);
         ctx.fillStyle = PAL.groundDark;
-        ctx.fillRect(sx + 2,  sy + 8,  3, 3);
-        ctx.fillRect(sx + 10, sy + 14, 4, 2);
-        ctx.fillRect(sx + 22, sy + 10, 3, 3);
+        ctx.fillRect(sx + 2 * z, sy + 8  * z, 3 * z, 3 * z);
+        ctx.fillRect(sx + 10* z, sy + 14 * z, 4 * z, 2 * z);
+        ctx.fillRect(sx + 22* z, sy + 10 * z, 3 * z, 3 * z);
 
       } else if (t === '2') {
         // Platform
         ctx.fillStyle = PAL.platform;
-        ctx.fillRect(sx, sy + 6, TILE, TILE - 6);
+        ctx.fillRect(sx, sy + 6 * z, ts, ts - 6 * z);
         ctx.fillStyle = PAL.platformTop;
-        ctx.fillRect(sx, sy, TILE, 7);
+        ctx.fillRect(sx, sy, ts, 7 * z);
 
       } else if (t === '3') {
         // Stone
         ctx.fillStyle = PAL.stone;
-        ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillRect(sx, sy, ts, ts);
         ctx.fillStyle = PAL.stoneDark;
-        ctx.fillRect(sx, sy, TILE, 2);
-        ctx.fillRect(sx, sy, 2, TILE);
+        ctx.fillRect(sx, sy, ts, 2 * z);
+        ctx.fillRect(sx, sy, 2 * z, ts);
         ctx.fillStyle = PAL.stoneLight;
-        ctx.fillRect(sx + 2,  sy + 2,  6, 4);
-        ctx.fillRect(sx + 18, sy + 16, 8, 4);
+        ctx.fillRect(sx + 2  * z, sy + 2  * z, 6 * z, 4 * z);
+        ctx.fillRect(sx + 18 * z, sy + 16 * z, 8 * z, 4 * z);
 
       } else if (t === '7') {
         // Lava (animated)
-        const lavaOff = Math.sin(G.tick * 0.08 + c * 0.5) * 3;
+        const lavaOff = Math.sin(G.tick * 0.08 + c * 0.5) * 3 * z;
         ctx.fillStyle = PAL.lava;
-        ctx.fillRect(sx, sy + lavaOff, TILE, TILE);
+        ctx.fillRect(sx, sy + lavaOff, ts, ts);
         ctx.fillStyle = PAL.lavaGlow;
         ctx.globalAlpha = 0.4 + 0.2 * Math.sin(G.tick * 0.1 + c);
-        ctx.fillRect(sx, sy + lavaOff, TILE, 8);
+        ctx.fillRect(sx, sy + lavaOff, ts, 8 * z);
         ctx.globalAlpha = 1;
         if (r > 0 && map.get(c, r - 1) === '0') {
           ctx.globalAlpha = 0.15;
           ctx.fillStyle = PAL.lavaGlow;
-          ctx.fillRect(sx, sy - 12, TILE, 12);
+          ctx.fillRect(sx, sy - 12 * z, ts, 12 * z);
           ctx.globalAlpha = 1;
         }
 
       } else if (t === '9') {
         // Pit (dark abyss)
         ctx.fillStyle = PAL.pit;
-        ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillRect(sx, sy, ts, ts);
       }
     }
   }

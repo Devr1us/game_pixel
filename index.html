@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="game-outer">
   <div id="game-wrapper">
     <!-- SCREENS -->
     <div id="screen-title" class="screen active">
@@ -142,7 +141,19 @@
     <!-- Checkpoint popup -->
     <div id="checkpoint-popup" class="hidden">CHECKPOINT SAVED ✓</div>
   </div>
-  </div> <!-- /game-outer -->
+
+  <!-- AUDIO ELEMENTS -->
+  <audio id="music-title" loop crossorigin="anonymous">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2742/2742-preview.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="music-game" loop crossorigin="anonymous">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2770/2770-preview.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- MUSIC CONTROL -->
+  <div id="music-control">
+    <button id="music-toggle">🔊</button>
+  </div>
 
   <!--
     ╔══════════════════════════════════════════════════════╗

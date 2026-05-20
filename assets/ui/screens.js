@@ -23,6 +23,16 @@ function showScreen(name) {
   };
   const el = document.getElementById(map[name]);
   if (el) { el.classList.add('active'); el.style.display = 'flex'; }
+  
+  // Manage audio based on screen
+  if (typeof Audio !== 'undefined') {
+    if (name === 'game') {
+      Audio.playGame();
+    } else if (name === 'title') {
+      Audio.playTitle();
+    }
+  }
+  
   if (name === 'levelclear') renderLevelClearStars();
   if (name === 'stages')     renderStageSelect();
 }

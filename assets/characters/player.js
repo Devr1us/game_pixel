@@ -42,8 +42,8 @@ class Player {
     this.iframes = 120;
     this.hp = this.maxHp;
     this.lavaTime = 0;
-    Camera.x = Math.max(0, this.x - Camera.viewW / 2);
-    Camera.y = Math.max(0, this.y - Camera.viewH / 2);
+    Camera.x = Math.max(0, this.x - canvas.width / 2);
+    Camera.y = Math.max(0, this.y - canvas.height / 2);
   }
 
   update(map, objects, dt = 1) {

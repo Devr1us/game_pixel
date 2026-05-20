@@ -45,6 +45,9 @@ html, body {
   max-height: 100vh;
   position: relative;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: var(--col-bg);
   border: 2px solid rgba(255,255,255,0.05);
   box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 28px 60px rgba(0,0,0,0.45);
@@ -206,17 +209,61 @@ html, body {
 /* ============================================================
    HOW TO PLAY
    ============================================================ */
-#screen-howto { background: rgba(0,0,0,0.95); }
+#screen-howto {
+  background: rgba(0,0,0,0.95);
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px 0;
+}
 .howto-box {
   background: var(--col-panel);
   border: 3px solid var(--col-border);
   padding: clamp(20px, 4vw, 40px);
   max-width: 700px;
   width: min(96vw, 100%);
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-shadow: 8px 8px 0 #000;
+}
+
+/* CUSTOM SCROLLBARS */
+#screen-stages,
+#screen-howto,
+.stages-box,
+.howto-box {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245,200,66,0.4) rgba(20,22,42,0.7);
+}
+#screen-stages::-webkit-scrollbar,
+#screen-howto::-webkit-scrollbar,
+.stages-box::-webkit-scrollbar,
+.howto-box::-webkit-scrollbar {
+  width: 10px;
+}
+#screen-stages::-webkit-scrollbar-track,
+#screen-howto::-webkit-scrollbar-track,
+.stages-box::-webkit-scrollbar-track,
+.howto-box::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+}
+#screen-stages::-webkit-scrollbar-thumb,
+#screen-howto::-webkit-scrollbar-thumb,
+.stages-box::-webkit-scrollbar-thumb,
+.howto-box::-webkit-scrollbar-thumb {
+  background: rgba(245,200,66,0.4);
+  border-radius: 999px;
+  border: 2px solid rgba(26,26,46,0.8);
+}
+#screen-stages::-webkit-scrollbar-thumb:hover,
+#screen-howto::-webkit-scrollbar-thumb:hover,
+.stages-box::-webkit-scrollbar-thumb:hover,
+.howto-box::-webkit-scrollbar-thumb:hover {
+  background: rgba(245,200,66,0.6);
 }
 .howto-title {
   font-size: clamp(12px, 2vw, 18px);
@@ -312,16 +359,27 @@ html, body {
 /* ============================================================
    STAGE SELECT
    ============================================================ */
-#screen-stages { background: rgba(0,0,0,0.92); }
+#screen-stages {
+  background: rgba(0,0,0,0.92);
+  align-items: center;
+  justify-content: center;
+  padding-top: 24px;
+  overflow-y: auto;
+}
 .stages-box {
   background: var(--col-panel);
   border: 3px solid var(--col-border);
   padding: clamp(20px, 3vw, 28px);
-  width: min(960px, 96vw);
+  width: min(840px, 90vw);
+  max-width: 840px;
+  max-height: calc(100vh - 120px);
+  margin: 0 auto;
   box-shadow: 8px 8px 0 #000;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  transform: translateY(-24px);
+  overflow-y: auto;
 }
 .stages-header { text-align: center; }
 .stages-title {
@@ -573,3 +631,50 @@ html, body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--col-dark); }
 ::-webkit-scrollbar-thumb { background: var(--col-border); }
+
+/* ============================================================
+   MUSIC CONTROL
+   ============================================================ */
+#music-control {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 50;
+}
+
+#music-toggle {
+  font-size: 28px;
+  background: rgba(26, 26, 46, 0.7);
+  border: 2px solid var(--col-gold);
+  color: var(--col-gold);
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 0;
+}
+
+#music-toggle:hover {
+  background: rgba(245, 200, 66, 0.15);
+  box-shadow: 0 0 12px rgba(245, 200, 66, 0.3);
+  transform: scale(1.08);
+}
+
+#music-toggle:active {
+  transform: scale(0.96);
+}
+
+#music-toggle.muted {
+  color: var(--col-dim);
+  border-color: var(--col-dim);
+}
+
+#music-toggle.muted:hover {
+  background: rgba(136, 136, 153, 0.15);
+  box-shadow: 0 0 12px rgba(136, 136, 153, 0.2);
+}
