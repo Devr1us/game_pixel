@@ -24,8 +24,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  width: 100%; height: 100%;
-  background: var(--col-bg);
+  width: 100%; height: 100%; min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #05050a;
   overflow: hidden;
   font-family: var(--pixel);
   color: var(--col-text);
@@ -34,17 +37,24 @@ html, body {
 
 /* ============================================================
    GAME WRAPPER & SCREENS
-   Full viewport — fleksibel di semua ukuran layar
+   Constrain to a centered game viewport
    ============================================================ */
 #game-wrapper {
-  width: 100vw; height: 100vh;
+  width: min(100vw, 1120px);
+  height: min(100vh, 720px);
+  max-height: 100vh;
   position: relative;
   overflow: hidden;
+  background: var(--col-bg);
+  border: 2px solid rgba(255,255,255,0.05);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 28px 60px rgba(0,0,0,0.45);
 }
 
 .screen {
   position: absolute;
   inset: 0;
+  min-height: 100vh;
+  width: 100%;
   display: none;
   align-items: center;
   justify-content: center;
@@ -82,6 +92,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: 18px;
+  width: min(92vw, 980px);
 }
 
 .title-logo {
@@ -199,9 +210,9 @@ html, body {
 .howto-box {
   background: var(--col-panel);
   border: 3px solid var(--col-border);
-  padding: 32px 40px;
-  max-width: 600px;
-  width: 90%;
+  padding: clamp(20px, 4vw, 40px);
+  max-width: 700px;
+  width: min(96vw, 100%);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -215,8 +226,8 @@ html, body {
 }
 .howto-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
 }
 .howto-item {
   display: flex;
@@ -305,8 +316,8 @@ html, body {
 .stages-box {
   background: var(--col-panel);
   border: 3px solid var(--col-border);
-  padding: 28px 28px 22px;
-  width: min(900px, 92vw);
+  padding: clamp(20px, 3vw, 28px);
+  width: min(960px, 96vw);
   box-shadow: 8px 8px 0 #000;
   display: flex;
   flex-direction: column;
@@ -326,11 +337,8 @@ html, body {
 }
 .stages-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
-}
-@media (max-width: 720px) {
-  .stages-grid { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
 }
 .stage-card {
   background: var(--col-dark);
@@ -388,6 +396,12 @@ html, body {
   justify-content: space-between;
   flex-wrap: wrap;
 }
+@media (max-width: 640px) {
+  .stages-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 .pixel-btn.danger {
   color: #fff;
   border-color: var(--col-red);
@@ -430,7 +444,8 @@ html, body {
 .pause-box {
   background: var(--col-panel);
   border: 3px solid var(--col-border);
-  padding: 40px;
+  padding: clamp(24px, 4vw, 40px);
+  width: min(90vw, 420px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -445,6 +460,8 @@ html, body {
 #screen-gameover { background: rgba(0,0,0,0.96); }
 .gameover-box {
   display: flex; flex-direction: column; align-items: center; gap: 20px;
+  width: min(92vw, 520px);
+  padding: 16px;
   animation: shakeIn 0.5s ease;
 }
 @keyframes shakeIn {
@@ -466,6 +483,8 @@ html, body {
 #screen-levelclear { background: rgba(0,0,0,0.9); }
 .clear-box {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
+  width: min(92vw, 520px);
+  padding: 16px;
   animation: popIn 0.4s ease;
 }
 @keyframes popIn {
@@ -506,6 +525,8 @@ html, body {
 #screen-victory { background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a14 80%); }
 .victory-box {
   display: flex; flex-direction: column; align-items: center; gap: 20px;
+  width: min(92vw, 520px);
+  padding: 16px;
   animation: victoryPop 0.6s ease;
 }
 @keyframes victoryPop {

@@ -34,6 +34,26 @@ const CAM_LERP = 0.08;
 let GAME_W = window.innerWidth;
 let GAME_H = window.innerHeight;
 
+const wrapper = document.getElementById('game-wrapper');
+
+function resizeCanvas() {
+  const ratio = window.devicePixelRatio || 1;
+  const rect = wrapper.getBoundingClientRect();
+  const width = Math.max(320, Math.floor(rect.width));
+  const height = Math.max(240, Math.floor(rect.height));
+
+  canvas.width = Math.floor(width * ratio);
+  canvas.height = Math.floor(height * ratio);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  GAME_W = width;
+  GAME_H = height;
+}
+
+resizeCanvas();
+
 // ─── PALETTE ────────────────────────────────────────────────
 const PAL = {
   sky1: '#1a1a3e', sky2: '#0a0a1e',
@@ -127,10 +147,7 @@ function initLevel(levelIdx) {
   const def = LEVELS[levelIdx];
   const map = new TileMap(def);
 
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-  GAME_W = canvas.width;
-  GAME_H = canvas.height;
+  resizeCanvas();
   Camera.init(map.pixelWidth(), map.pixelHeight());
 
   const ps = def.playerStart;
@@ -203,16 +220,11 @@ function gameLoop(ts) {
   updateHUD();
 
   drawBackground();
-  // Terapkan zoom ke semua objek world (tiles, sprites, obstacles, dll)
-  ctx.save();
-  ctx.scale(Camera.zoom, Camera.zoom);
   drawTiles(currentLevel.map);
   drawObjects();
   Particles.draw();
   player.draw();
   currentLevel.boss.draw();
-  ctx.restore();
-  // HUD digambar di atas zoom (koordinat layar langsung)
   drawHUDCanvas(player);
 
   G.justPressed = {};
@@ -338,10 +350,7 @@ document.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', () => {
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-  GAME_W = canvas.width;
-  GAME_H = canvas.height;
+  resizeCanvas();
   if (currentLevel.map) Camera.init(currentLevel.map.pixelWidth(), currentLevel.map.pixelHeight());
 });
 
