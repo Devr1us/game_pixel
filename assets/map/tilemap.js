@@ -1,9 +1,17 @@
 /* ============================================================
    ASSETS — MAP: TILEMAP
-   Class TileMap, Camera, dan fungsi drawTiles / drawBackground
+   Class TileMap, Camera (dengan zoom), drawTiles, drawBackground
    Tile legend:
      0=air, 1=ground, 2=platform, 3=stone,
      7=lava, 9=pit(void), c=cloud-platform
+
+   CATATAN ZOOM:
+   - Camera.zoom dihitung di Camera.init()
+   - ctx.scale(zoom, zoom) diterapkan di game loop (game.js)
+     sebelum drawTiles/drawObjects/player/boss
+   - Semua koordinat di sini adalah koordinat WORLD (sebelum zoom)
+   - Camera.toScreen() mengembalikan koordinat world-space (tanpa zoom)
+     karena zoom sudah ditangani oleh ctx.scale
    ============================================================ */
 
 'use strict';
@@ -52,33 +60,51 @@ class TileMap {
 }
 
 // ─── CAMERA ─────────────────────────────────────────────────
+// zoom: skala render — dihitung agar seluruh tinggi map muat di layar
+// ctx.scale(zoom, zoom) diterapkan di game loop sebelum draw world
 const Camera = {
   x: 0, y: 0,
   W: 0, H: 0,
+  zoom: 1,
+  viewW: 0, viewH: 0,
   maxX: 0, maxY: 0,
 
   init(mapW, mapH) {
-    this.W    = GAME_W;
-    this.H    = GAME_H;
-    this.maxX = Math.max(0, mapW - this.W);
-    this.maxY = Math.max(0, mapH - this.H);
+    this.W = GAME_W;
+    this.H = GAME_H;
+
+    // Zoom agar seluruh tinggi map muat di layar (landscape)
+    // Tidak melebihi 1 (tidak zoom in melebihi ukuran asli)
+    const zoomByH = GAME_H / mapH;
+    const zoomByW = GAME_W / mapW;
+    this.zoom = Math.min(1, Math.max(zoomByH, zoomByW));
+
+    // Ukuran area world yang terlihat
+    this.viewW = GAME_W / this.zoom;
+    this.viewH = GAME_H / this.zoom;
+
+    this.maxX = Math.max(0, mapW - this.viewW);
+    this.maxY = Math.max(0, mapH - this.viewH);
   },
 
   follow(px, py) {
-    const tx = px - this.W / 2;
-    const ty = py - this.H / 2;
+    const tx = px - this.viewW / 2;
+    const ty = py - this.viewH / 2;
     this.x += (Math.min(Math.max(tx, 0), this.maxX) - this.x) * CAM_LERP;
     this.y += (Math.min(Math.max(ty, 0), this.maxY) - this.y) * CAM_LERP;
   },
 
+  // Konversi world → screen dalam koordinat world-space
+  // (zoom ditangani oleh ctx.scale di game loop)
   toScreen(wx, wy) {
     return { x: wx - this.x, y: wy - this.y };
   },
 
   inView(wx, wy, w, h) {
-    return wx + w > this.x && wx < this.x + this.W &&
-           wy + h > this.y && wy < this.y + this.H;
-  }};
+    return wx + w > this.x && wx < this.x + this.viewW &&
+           wy + h > this.y && wy < this.y + this.viewH;
+  },
+};
 
 // ─── BACKGROUND GENERATION ───────────────────────────────────
 function generateStars(n) {
@@ -110,6 +136,7 @@ function generateClouds(n, mapW) {
 }
 
 // ─── DRAW BACKGROUND ─────────────────────────────────────────
+// Background digambar di luar ctx.scale (koordinat layar langsung)
 function drawBackground() {
   const def = currentLevel.def;
   const [bg1, bg2] = def.bgColor;
@@ -119,10 +146,10 @@ function drawBackground() {
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, GAME_W, GAME_H);
 
-  // Stars (parallax)
+  // Stars (koordinat layar, parallax ringan)
   currentLevel.bgStars.forEach(s => {
-    const sx = s.x * GAME_W - Camera.x * 0.05;
-    const sy = s.y * GAME_H;
+    const sx    = s.x * GAME_W - Camera.x * 0.05 * Camera.zoom;
+    const sy    = s.y * GAME_H;
     const alpha = 0.4 + 0.4 * Math.sin(s.twinkle + G.tick * 0.03);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = PAL.star;
@@ -130,24 +157,27 @@ function drawBackground() {
   });
   ctx.globalAlpha = 1;
 
-  // Clouds (parallax)
+  // Clouds (koordinat layar, parallax)
   currentLevel.bgClouds.forEach(c => {
-    const cx = c.x - Camera.x * c.parallax;
-    const cy = c.y - Camera.y * 0.05;
+    const cx = (c.x - Camera.x * c.parallax) * Camera.zoom;
+    const cy = (c.y - Camera.y * 0.05) * Camera.zoom;
+    const cw = c.w * Camera.zoom;
+    const ch = c.h * Camera.zoom;
     ctx.globalAlpha = 0.12;
     ctx.fillStyle = PAL.cloud;
-    ctx.fillRect(cx, cy, c.w, c.h);
-    ctx.fillRect(cx + 12, cy - 8, c.w * 0.7, c.h);
+    ctx.fillRect(cx, cy, cw, ch);
+    ctx.fillRect(cx + 12 * Camera.zoom, cy - 8 * Camera.zoom, cw * 0.7, ch);
     ctx.globalAlpha = 1;
   });
 }
 
 // ─── DRAW TILEMAP ─────────────────────────────────────────────
+// Dipanggil di dalam ctx.scale(zoom, zoom) — koordinat world-space
 function drawTiles(map) {
   const startCol = Math.max(0, Math.floor(Camera.x / TILE));
-  const endCol   = Math.min(map.cols - 1, Math.ceil((Camera.x + GAME_W) / TILE));
+  const endCol   = Math.min(map.cols - 1, Math.ceil((Camera.x + Camera.viewW) / TILE));
   const startRow = Math.max(0, Math.floor(Camera.y / TILE));
-  const endRow   = Math.min(map.rowCount - 1, Math.ceil((Camera.y + GAME_H) / TILE));
+  const endRow   = Math.min(map.rowCount - 1, Math.ceil((Camera.y + Camera.viewH) / TILE));
 
   for (let r = startRow; r <= endRow; r++) {
     for (let c = startCol; c <= endCol; c++) {

@@ -30,9 +30,9 @@ const TILE     = 32;
 const GRAVITY  = 0.55;
 const CAM_LERP = 0.08;
 
-// Ukuran canvas game (portrait 9:16)
-const GAME_W = 480;
-const GAME_H = 854;
+// Ukuran canvas — selalu mengikuti viewport
+let GAME_W = window.innerWidth;
+let GAME_H = window.innerHeight;
 
 // ─── PALETTE ────────────────────────────────────────────────
 const PAL = {
@@ -127,8 +127,10 @@ function initLevel(levelIdx) {
   const def = LEVELS[levelIdx];
   const map = new TileMap(def);
 
-  canvas.width  = GAME_W;
-  canvas.height = GAME_H;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  GAME_W = canvas.width;
+  GAME_H = canvas.height;
   Camera.init(map.pixelWidth(), map.pixelHeight());
 
   const ps = def.playerStart;
@@ -201,11 +203,16 @@ function gameLoop(ts) {
   updateHUD();
 
   drawBackground();
+  // Terapkan zoom ke semua objek world (tiles, sprites, obstacles, dll)
+  ctx.save();
+  ctx.scale(Camera.zoom, Camera.zoom);
   drawTiles(currentLevel.map);
   drawObjects();
   Particles.draw();
   player.draw();
   currentLevel.boss.draw();
+  ctx.restore();
+  // HUD digambar di atas zoom (koordinat layar langsung)
   drawHUDCanvas(player);
 
   G.justPressed = {};
@@ -331,7 +338,10 @@ document.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', () => {
-  // Canvas tetap 480×854, hanya scale CSS yang berubah
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  GAME_W = canvas.width;
+  GAME_H = canvas.height;
   if (currentLevel.map) Camera.init(currentLevel.map.pixelWidth(), currentLevel.map.pixelHeight());
 });
 
