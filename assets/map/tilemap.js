@@ -58,8 +58,8 @@ const Camera = {
   maxX: 0, maxY: 0,
 
   init(mapW, mapH) {
-    this.W    = canvas.width;
-    this.H    = canvas.height;
+    this.W    = GAME_W;
+    this.H    = GAME_H;
     this.maxX = Math.max(0, mapW - this.W);
     this.maxY = Math.max(0, mapH - this.H);
   },
@@ -78,8 +78,7 @@ const Camera = {
   inView(wx, wy, w, h) {
     return wx + w > this.x && wx < this.x + this.W &&
            wy + h > this.y && wy < this.y + this.H;
-  }
-};
+  }};
 
 // ─── BACKGROUND GENERATION ───────────────────────────────────
 function generateStars(n) {
@@ -114,20 +113,20 @@ function generateClouds(n, mapW) {
 function drawBackground() {
   const def = currentLevel.def;
   const [bg1, bg2] = def.bgColor;
-  const grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  const grd = ctx.createLinearGradient(0, 0, 0, GAME_H);
   grd.addColorStop(0, bg2);
   grd.addColorStop(1, bg1);
   ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, GAME_W, GAME_H);
 
   // Stars (parallax)
   currentLevel.bgStars.forEach(s => {
-    const sx = s.x * canvas.width - Camera.x * 0.05;
-    const sy = s.y * canvas.height;
+    const sx = s.x * GAME_W - Camera.x * 0.05;
+    const sy = s.y * GAME_H;
     const alpha = 0.4 + 0.4 * Math.sin(s.twinkle + G.tick * 0.03);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = PAL.star;
-    ctx.fillRect(sx % canvas.width, sy, s.size, s.size);
+    ctx.fillRect(sx % GAME_W, sy, s.size, s.size);
   });
   ctx.globalAlpha = 1;
 
@@ -146,9 +145,9 @@ function drawBackground() {
 // ─── DRAW TILEMAP ─────────────────────────────────────────────
 function drawTiles(map) {
   const startCol = Math.max(0, Math.floor(Camera.x / TILE));
-  const endCol   = Math.min(map.cols - 1, Math.ceil((Camera.x + canvas.width) / TILE));
+  const endCol   = Math.min(map.cols - 1, Math.ceil((Camera.x + GAME_W) / TILE));
   const startRow = Math.max(0, Math.floor(Camera.y / TILE));
-  const endRow   = Math.min(map.rowCount - 1, Math.ceil((Camera.y + canvas.height) / TILE));
+  const endRow   = Math.min(map.rowCount - 1, Math.ceil((Camera.y + GAME_H) / TILE));
 
   for (let r = startRow; r <= endRow; r++) {
     for (let c = startCol; c <= endCol; c++) {

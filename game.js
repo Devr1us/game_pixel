@@ -30,6 +30,10 @@ const TILE     = 32;
 const GRAVITY  = 0.55;
 const CAM_LERP = 0.08;
 
+// Ukuran canvas game (portrait 9:16)
+const GAME_W = 480;
+const GAME_H = 854;
+
 // ─── PALETTE ────────────────────────────────────────────────
 const PAL = {
   sky1: '#1a1a3e', sky2: '#0a0a1e',
@@ -123,8 +127,8 @@ function initLevel(levelIdx) {
   const def = LEVELS[levelIdx];
   const map = new TileMap(def);
 
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width  = GAME_W;
+  canvas.height = GAME_H;
   Camera.init(map.pixelWidth(), map.pixelHeight());
 
   const ps = def.playerStart;
@@ -327,8 +331,7 @@ document.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', () => {
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
+  // Canvas tetap 480×854, hanya scale CSS yang berubah
   if (currentLevel.map) Camera.init(currentLevel.map.pixelWidth(), currentLevel.map.pixelHeight());
 });
 

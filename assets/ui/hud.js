@@ -54,7 +54,7 @@ function drawHUDCanvas(player) {
 
   // Obor dekoratif di sudut atas
   drawTorch(20, 60);
-  drawTorch(canvas.width - 30, 60);
+  drawTorch(GAME_W - 30, 60);
 }
 
 // ─── TORCH ───────────────────────────────────────────────────
