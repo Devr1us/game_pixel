@@ -87,7 +87,15 @@ class Boss {
   }
 
   update(map, player) {
-    if (!this.alive || !this.active) return;
+    if (!this.alive) return;
+
+    // Gravity selalu berjalan agar boss tidak melayang sebelum aktif
+    if (!this.active) {
+      this.vy += GRAVITY;
+      if (this.vy > 18) this.vy = 18;
+      this._moveY(map);
+      return;
+    }
 
     if (this.deathAnim > 0) {
       this.deathAnim--;

@@ -295,11 +295,16 @@ function gameLoop(ts) {
   updateHUD();
 
   drawBackground();
+  // Terapkan zoom — semua objek world digambar dalam koordinat world-space
+  ctx.save();
+  ctx.scale(Camera.zoom, Camera.zoom);
   drawTiles(currentLevel.map);
   drawObjects();
   Particles.draw();
   player.draw();
   currentLevel.boss.draw();
+  ctx.restore();
+  // HUD digambar di atas zoom (koordinat layar)
   drawHUDCanvas(player);
 
   G.justPressed = {};
