@@ -230,6 +230,12 @@ html, body {
   box-shadow: 8px 8px 0 #000;
 }
 
+.howto-back-btn {
+  margin: 0 auto 10px;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
 /* CUSTOM SCROLLBARS */
 #screen-stages,
 #screen-howto,
