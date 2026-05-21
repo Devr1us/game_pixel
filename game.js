@@ -458,6 +458,22 @@ function _bindUIAndBoot() {
     showScreen('title');
   });
 
+  // Tombol pause di HUD
+  document.getElementById('btn-pause-hud').addEventListener('click', () => {
+    if (!G.running) return;
+    G.paused = !G.paused;
+    document.getElementById('pause-overlay').classList.toggle('hidden', !G.paused);
+  });
+
+  // Tombol Stage Select di pause menu
+  document.getElementById('btn-pause-stages').addEventListener('click', () => {
+    G.running = false;
+    G.paused  = false;
+    cancelAnimationFrame(animId);
+    document.getElementById('pause-overlay').classList.add('hidden');
+    showScreen('stages');
+  });
+
   document.getElementById('btn-retry').addEventListener('click', () => {
     G.lives = 3;
     G.score = 0;

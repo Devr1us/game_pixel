@@ -338,6 +338,16 @@ html, body {
 #hud-time { color: #9ad5ff; font-size: 8px; }
 #hud-lives { display: flex; gap: 4px; font-size: 14px; }
 
+/* Tombol pause di HUD */
+.hud-pause-btn {
+  font-size: 10px;
+  padding: 4px 8px;
+  margin-top: 4px;
+  pointer-events: all;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #8a6e00;
+}
+
 /* Boss bar */
 #hud-center { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding-top: 4px; }
 #hud-boss-bar { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 240px; }

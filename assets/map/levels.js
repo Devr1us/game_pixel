@@ -272,7 +272,10 @@ const BASE_LEVELS = [
       { type: 'hspike', x: 18, y: 10 }, { type: 'hspike', x: 19, y: 10 },
       { type: 'hspike', x: 32, y: 9  }, { type: 'hspike', x: 33, y: 9  },
       { type: 'hspike', x: 46, y: 8  }, { type: 'hspike', x: 47, y: 8  },
-      { type: 'checkpoint', x: 20, y: 10 }, { type: 'checkpoint', x: 42, y: 10 },
+      // Checkpoint — posisi aman: jauh dari spike (x:10-12, x:24-25, x:38-40, x:54-55)
+      // dan jauh dari saw (x:16, x:35, x:50)
+      // CP1: x:7 (sebelum spike pertama), CP2: x:30 (antara spike x:25 dan x:38, area bersih)
+      { type: 'checkpoint', x: 7,  y: 10 }, { type: 'checkpoint', x: 30, y: 10 },
       { type: 'mplatform', x: 26, y: 9, range: 5, speed: 1.5 },
       { type: 'mplatform', x: 48, y: 8, range: 4, speed: 2   },
       { type: 'mplatform', x: 59, y: 7, range: 3, speed: 2.5 },
@@ -338,7 +341,10 @@ const BASE_LEVELS = [
       { type: 'hspike', x: 30, y: 8 }, { type: 'hspike', x: 31, y: 8 },
       { type: 'hspike', x: 45, y: 9 }, { type: 'hspike', x: 46, y: 9 },
       { type: 'hspike', x: 56, y: 8 },
-      { type: 'checkpoint', x: 22, y: 10 }, { type: 'checkpoint', x: 48, y: 10 },
+      // Checkpoint — posisi aman: jauh dari spike (x:10-11, x:22-24, x:36-37, x:48-50, x:60-61)
+      // dan jauh dari saw (x:8, x:27, x:40, x:58)
+      // CP1: x:16 (antara spike x:11 dan x:22, area bersih), CP2: x:43 (antara spike x:37 dan x:48)
+      { type: 'checkpoint', x: 16, y: 10 }, { type: 'checkpoint', x: 43, y: 10 },
       { type: 'mplatform', x: 15, y: 10, range: 4, speed: 2   },
       { type: 'mplatform', x: 32, y: 9,  range: 3, speed: 2.5 },
       { type: 'mplatform', x: 55, y: 8,  range: 4, speed: 3   },
