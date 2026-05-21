@@ -81,7 +81,7 @@ function makeStageObjects(width, stageNum) {
   const objs = [];
 
   // ── Difficulty scaling per stage ──────────────────────────
-  // Stage 1–3: easy, 4–6: medium, 7–10: hard/extreme
+  // Stage 1–3: easy (hand-crafted), 4–6: medium, 7–10: hard/extreme
   const diff = stageNum; // 1..10
 
   // Coins
@@ -94,9 +94,10 @@ function makeStageObjects(width, stageNum) {
 
   const spikeY = floorRow;
 
-  // Floor spikes — makin banyak & rapat per stage
-  const spikeGroupCount = 2 + Math.floor(diff / 2);          // 2..7 grup
-  const spikeGroupSize  = 1 + Math.floor(diff / 3);          // 1..4 per grup
+  // ── Floor spikes — makin banyak, rapat, dan berkelompok ──
+  // Stage 4: 3 grup x1, Stage 6: 4 grup x2, Stage 8: 6 grup x3, Stage 10: 7 grup x4
+  const spikeGroupCount = 2 + Math.floor(diff / 2);          // 4..7 grup
+  const spikeGroupSize  = 1 + Math.floor(diff / 3);          // 2..4 per grup
   const spikeStep = Math.max(6, Math.floor((width - 20) / (spikeGroupCount + 1)));
   for (let g = 0; g < spikeGroupCount; g++) {
     const sx = 10 + g * spikeStep + (diff % 3);
@@ -106,59 +107,76 @@ function makeStageObjects(width, stageNum) {
     }
   }
 
-  // Hanging spikes — muncul mulai stage 2, makin banyak
-  if (diff >= 2) {
-    const hCount = Math.floor(diff / 2);                      // 1..5
+  // ── Hanging spikes — muncul mulai stage 4, makin banyak & lebih rendah ──
+  if (diff >= 4) {
+    const hCount = Math.floor((diff - 3) * 0.8);             // 1..5
     const hStep  = Math.floor((width - 20) / (hCount + 1));
     for (let i = 0; i < hCount; i++) {
       const hx = 12 + i * hStep + (diff % 4);
-      const hy = diff >= 6 ? 7 : 8;                          // lebih rendah di stage tinggi
+      // Makin tinggi stage, spike gantung makin rendah (lebih mengancam)
+      const hy = diff >= 8 ? 5 : (diff >= 6 ? 6 : 7);
       if (hx > 10 && hx < width - 14) objs.push({ type: 'hspike', x: hx, y: hy });
     }
   }
 
-  // Saw blades — makin banyak, makin cepat, makin jauh jangkauannya
-  const sawCount = 1 + Math.floor(diff / 2);                 // 1..6
-  const sawSpeed = 1.2 + diff * 0.28;                        // 1.5..4.0
-  const sawRange = 3 + Math.floor(diff / 3);                 // 3..6
+  // ── Saw blades — makin banyak, cepat, jangkauan jauh, axis bervariasi ──
+  // Stage 4: 2 saw x, Stage 6: 3 saw (1 vertikal), Stage 8: 5 saw (2 vertikal), Stage 10: 6 saw (3 vertikal)
+  const sawCount = 1 + Math.floor(diff / 2);                 // 3..6
+  const sawSpeed = 1.4 + diff * 0.30;                        // 2.6..4.4
+  const sawRange = 3 + Math.floor(diff / 3);                 // 4..6
   for (let i = 0; i < sawCount; i++) {
     const sx = 14 + i * 12 + (diff % 5);
-    const axis = (diff >= 5 && i % 2 === 1) ? 'y' : 'x';    // vertical saw mulai stage 5
+    // Vertical saw mulai stage 5, makin banyak di stage tinggi
+    const axis = (diff >= 5 && i % Math.max(1, 4 - Math.floor(diff / 3)) === 1) ? 'y' : 'x';
     if (sx < width - 14)
       objs.push({ type: 'saw', x: sx, y: spikeY, range: sawRange, speed: sawSpeed, axis });
   }
 
-  // Falling spikes — muncul mulai stage 3, makin sering
-  if (diff >= 3) {
-    const fsCount  = Math.floor((diff - 2) / 2);             // 1..4
-    const fsPeriod = Math.max(35, 130 - diff * 10);          // 120..35
+  // ── Falling spikes — muncul mulai stage 4, makin sering & banyak ──
+  if (diff >= 4) {
+    const fsCount  = Math.floor((diff - 3) / 1.5);           // 1..4
+    const fsPeriod = Math.max(28, 120 - diff * 10);          // 80..28
     for (let i = 0; i < fsCount; i++) {
-      const fx = 20 + i * 18 + (diff % 7);
+      const fx = 20 + i * 16 + (diff % 7);
       if (fx < width - 14) objs.push({ type: 'fallingspike', x: fx, y: 2, period: fsPeriod });
     }
   }
 
-  // Minion spawns — muncul mulai stage 6
+  // ── Minion spawns — muncul mulai stage 6, makin banyak & kuat ──
   if (diff >= 6) {
-    const minionCount = Math.floor((diff - 5) * 1.5);        // 1..7
-    const minionSpeed = 0.8 + (diff - 6) * 0.3;             // 0.8..2.0
-    const minionHp    = 20 + (diff - 6) * 15;               // 20..80
+    // Jumlah minion: stage 6=2, 7=3, 8=4, 9=5, 10=6
+    const minionCount = diff - 4;                            // 2..6
+    // Kecepatan: stage 6=1.0, 7=1.3, 8=1.6, 9=1.9, 10=2.2
+    const minionSpeed = 0.7 + (diff - 6) * 0.3 + 0.3;
+    // HP: stage 6=30, 7=45, 8=60, 9=75, 10=90
+    const minionHp    = 30 + (diff - 6) * 15;
+    // Stage 8+: ada minion "elite" dengan HP 2x dan kecepatan 1.5x
     for (let i = 0; i < minionCount; i++) {
       const mx = 15 + i * Math.floor((width - 30) / (minionCount + 1));
-      if (mx < width - 14)
-        objs.push({ type: 'minion', x: mx, y: spikeY - 1, speed: minionSpeed, hp: minionHp });
+      if (mx < width - 14) {
+        const isElite = diff >= 8 && i % 2 === 0;
+        objs.push({
+          type: 'minion',
+          x: mx,
+          y: spikeY - 1,
+          speed: isElite ? minionSpeed * 1.5 : minionSpeed,
+          hp:    isElite ? minionHp * 2       : minionHp,
+        });
+      }
     }
   }
 
-  // Checkpoints — posisi aman (1/3 dan 2/3 map, offset dari spike)
+  // ── Checkpoints — posisi aman (1/3 dan 2/3 map) ──
   objs.push({ type: 'checkpoint', x: Math.floor(width * 0.28), y: floorRow - 1 });
   objs.push({ type: 'checkpoint', x: Math.floor(width * 0.62), y: floorRow - 1 });
 
-  // Moving platforms — makin cepat per stage
-  const mpSpeed1 = 1.4 + diff * 0.14;
-  const mpSpeed2 = 1.6 + diff * 0.16;
-  objs.push({ type: 'mplatform', x: Math.floor(width * 0.38), y: 9, range: 4 + (diff % 3), speed: mpSpeed1 });
-  objs.push({ type: 'mplatform', x: Math.floor(width * 0.58), y: 7, range: 3 + (diff % 4), speed: mpSpeed2 });
+  // ── Moving platforms — makin cepat & jangkauan lebih jauh per stage ──
+  const mpSpeed1 = 1.4 + diff * 0.16;
+  const mpSpeed2 = 1.6 + diff * 0.18;
+  const mpRange1 = 4 + Math.floor(diff / 3);
+  const mpRange2 = 3 + Math.floor(diff / 2);
+  objs.push({ type: 'mplatform', x: Math.floor(width * 0.38), y: 9, range: mpRange1, speed: mpSpeed1 });
+  objs.push({ type: 'mplatform', x: Math.floor(width * 0.58), y: 7, range: mpRange2, speed: mpSpeed2 });
 
   // Boss gate + portal
   objs.push({ type: 'bossgate', x: width - 11, y: floorRow - 1 });
@@ -170,14 +188,22 @@ function makeStageObjects(width, stageNum) {
 function generateExtraLevels(startStage, endStage) {
   const out       = [];
   const themes    = ['forest', 'citadel', 'abyss'];
-  const bossNames = ['Shadow Knight', 'Phantom Warlord', 'Inferno Reaper'];
+  const bossNames = [
+    'Shadow Knight', 'Phantom Warlord', 'Inferno Reaper',
+    'Void Stalker', 'Iron Colossus', 'Plague Wraith',
+    'Storm Titan', 'Chaos Demon', 'Abyssal Overlord', 'Eternal Destroyer'
+  ];
+
+  // Boss HP scaling: lebih dramatis per stage
+  // Stage 4=180, 5=230, 6=290, 7=360, 8=440, 9=530, 10=640
+  const bossHpTable = [0, 0, 0, 0, 180, 230, 290, 360, 440, 530, 640];
 
   for (let stage = startStage; stage <= endStage; stage++) {
     const theme     = themes[(stage - 1) % themes.length];
     const themeName = theme === 'forest' ? 'Dark Forest' : (theme === 'citadel' ? 'Stone Citadel' : 'Lava Abyss');
     const width     = 68 + stage * 2;
     const bossId    = stage - 1;  // stage 4→id 3, stage 5→id 4, ... stage 10→id 9
-    const bossHp    = 60 + stage * 22 + bossId * 8;
+    const bossHp    = bossHpTable[stage] || (60 + stage * 22 + bossId * 8);
 
     out.push({
       name:       `Stage ${stage} — ${themeName}`,

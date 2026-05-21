@@ -403,6 +403,8 @@ function startLevel(idx) {
   G.paused  = false;
   document.getElementById('pause-overlay').classList.add('hidden');
   Particles.pool = [];
+  // Reset nyawa ke 3 setiap kali mulai stage baru (dari stage select, retry, atau next level)
+  G.lives = 3;
   initLevel(idx);
   showScreen('game');
   G.running = true;

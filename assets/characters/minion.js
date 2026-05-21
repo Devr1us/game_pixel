@@ -2,6 +2,8 @@
    ASSETS — CHARACTER: MINION
    Musuh kecil yang muncul di stage 6–10.
    Bergerak bolak-balik di lantai, menyerang player saat dekat.
+   Stage 8+: ada minion "elite" dengan HP 2x, kecepatan 1.5x,
+             dan tampilan berbeda (lebih besar, warna lebih gelap).
    ============================================================ */
 
 'use strict';
@@ -24,10 +26,24 @@ class Minion {
     this.walkAnim = 0;
     this.attackTimer = 0;
     this.deathAnim = 0;
-    // Warna berdasarkan HP (makin kuat makin merah)
-    const t = Math.min(1, hp / 80);
-    this.color  = `rgb(${Math.floor(180 + t * 60)}, ${Math.floor(60 - t * 40)}, ${Math.floor(60 - t * 40)})`;
-    this.eyeCol = hp >= 60 ? '#ff2222' : (hp >= 40 ? '#ff8800' : '#ffcc00');
+
+    // Elite minion: HP ≥ 60 (stage 8+, isElite = hp >= 2x normal)
+    this.isElite = hp >= 60;
+
+    if (this.isElite) {
+      // Elite: lebih besar, warna ungu gelap, mata merah menyala
+      this.w = 26;
+      this.h = 34;
+      this.color  = '#5a1a6a';
+      this.darkColor = '#2a0a3a';
+      this.eyeCol = '#ff2222';
+    } else {
+      // Normal: warna berdasarkan HP (makin kuat makin merah)
+      const t = Math.min(1, hp / 60);
+      this.color  = `rgb(${Math.floor(180 + t * 60)}, ${Math.floor(60 - t * 40)}, ${Math.floor(60 - t * 40)})`;
+      this.darkColor = '#5a1a1a';
+      this.eyeCol = hp >= 45 ? '#ff2222' : (hp >= 30 ? '#ff8800' : '#ffcc00');
+    }
   }
 
   update(map, player) {
@@ -91,26 +107,30 @@ class Minion {
     if (this.iframes > 0) this.iframes--;
 
     // Serang player saat dekat
+    // Elite: jangkauan serangan lebih lebar, cooldown lebih pendek
     if (this.attackTimer > 0) { this.attackTimer--; return; }
+    const attackRange = this.isElite ? 36 : 28;
+    const attackCooldown = this.isElite ? 45 : 60;
     const dx = Math.abs((player.x + player.w / 2) - (this.x + this.w / 2));
     const dy = Math.abs((player.y + player.h / 2) - (this.y + this.h / 2));
-    if (dx < 28 && dy < 32 && player.iframes <= 0) {
+    if (dx < attackRange && dy < 36 && player.iframes <= 0) {
       player.takeDamage('minion');
-      this.attackTimer = 60;
+      this.attackTimer = attackCooldown;
     }
 
     // Terima serangan player
     const ab = player.attackBox;
     if (ab && player.attacking && this.iframes <= 0 && rectsOverlap(ab, this)) {
-      this.hp -= 25;
+      const dmg = this.isElite ? 15 : 25; // Elite lebih tahan
+      this.hp -= dmg;
       this.iframes = 30;
-      G.score += 20;
+      G.score += this.isElite ? 30 : 20;
       updateHUD();
       Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 5, this.eyeCol, 0, -2, 3, 18);
       if (this.hp <= 0) {
         this.hp = 0;
         this.deathAnim = 20;
-        G.score += 80;
+        G.score += this.isElite ? 150 : 80;
         updateHUD();
         Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 10, this.eyeCol, 0, -3, 4, 25);
       }
@@ -139,23 +159,31 @@ class Minion {
     ctx.fillRect(cx + 2, cy + this.h - 2, this.w - 4, 3); ctx.globalAlpha = 1;
 
     // Kaki
-    ctx.fillStyle = '#5a1a1a';
-    ctx.fillRect(cx + 3,  cy + 18, 6, 10 + legOff);
-    ctx.fillRect(cx + 11, cy + 18, 6, 10 - legOff);
+    ctx.fillStyle = this.darkColor;
+    ctx.fillRect(cx + 3,  cy + Math.floor(this.h * 0.65), 6, Math.floor(this.h * 0.35) + legOff);
+    ctx.fillRect(cx + 11, cy + Math.floor(this.h * 0.65), 6, Math.floor(this.h * 0.35) - legOff);
 
     // Badan
     ctx.fillStyle = this.color;
-    ctx.fillRect(cx + 2, cy + 8, this.w - 4, 12);
+    ctx.fillRect(cx + 2, cy + Math.floor(this.h * 0.3), this.w - 4, Math.floor(this.h * 0.38));
 
     // Kepala
     ctx.fillStyle = this.color;
-    ctx.fillRect(cx + 3, cy, this.w - 6, 10);
+    ctx.fillRect(cx + 3, cy, this.w - 6, Math.floor(this.h * 0.32));
 
-    // Mata merah menyala
+    // Tanduk elite
+    if (this.isElite) {
+      ctx.fillStyle = '#ff4400';
+      ctx.fillRect(cx + 4,  cy - 6, 4, 8);
+      ctx.fillRect(cx + this.w - 8, cy - 6, 4, 8);
+    }
+
+    // Mata menyala
     ctx.fillStyle = this.eyeCol;
-    ctx.shadowBlur = 6; ctx.shadowColor = this.eyeCol;
+    ctx.shadowBlur = this.isElite ? 10 : 6;
+    ctx.shadowColor = this.eyeCol;
     const eyeX = this.facing === 1 ? cx + this.w - 8 : cx + 3;
-    ctx.fillRect(eyeX, cy + 2, 4, 4);
+    ctx.fillRect(eyeX, cy + 3, this.isElite ? 5 : 4, this.isElite ? 5 : 4);
     ctx.shadowBlur = 0;
 
     // HP bar mini di atas kepala
@@ -163,7 +191,7 @@ class Minion {
       const bw = this.w;
       ctx.fillStyle = '#333';
       ctx.fillRect(cx, cy - 6, bw, 3);
-      ctx.fillStyle = this.eyeCol;
+      ctx.fillStyle = this.isElite ? '#ff44ff' : this.eyeCol;
       ctx.fillRect(cx, cy - 6, bw * (this.hp / this.maxHp), 3);
     }
   }

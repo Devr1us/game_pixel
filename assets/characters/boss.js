@@ -12,116 +12,128 @@
 // chargeRate : interval charge (0 = tidak charge)
 // teleRate   : interval teleport (0 = tidak teleport)
 // jumpRate   : interval lompat (0 = tidak lompat)
-// shotCount  : jumlah proyektil per serangan di phase terakhir
+// shotCount  : jumlah proyektil per serangan
+// shotSpeed  : kecepatan proyektil boss
+// burstShot  : tembak burst (true = tembak 3x cepat saat phase 2+)
 const BOSS_DEFS = [
   {
     // Stage 1 — Shadow Knight (EASY)
+    // Hanya berjalan & menyerang lurus, tidak charge/teleport/lompat
     name: 'Shadow Knight', w: 48, h: 56,
     color: PAL.boss1, dark: PAL.boss1Dark, eye: PAL.boss1Eye,
     swordColor: '#a0a0ff',
     phases: [
-      { hpPct: 1.0,  speed: 1.6, attackRate: 100, chargeRate: 0,   teleRate: 0, jumpRate: 0, shotCount: 1 },
-      { hpPct: 0.5,  speed: 2.4, attackRate: 70,  chargeRate: 280, teleRate: 0, jumpRate: 0, shotCount: 2 },
-      { hpPct: 0.25, speed: 3.2, attackRate: 50,  chargeRate: 160, teleRate: 0, jumpRate: 0, shotCount: 3 },
+      { hpPct: 1.0,  speed: 1.4, attackRate: 110, chargeRate: 0,   teleRate: 0,   jumpRate: 0,   shotCount: 1, shotSpeed: 4.0 },
+      { hpPct: 0.5,  speed: 2.0, attackRate: 80,  chargeRate: 320, teleRate: 0,   jumpRate: 0,   shotCount: 2, shotSpeed: 4.5 },
+      { hpPct: 0.25, speed: 2.8, attackRate: 55,  chargeRate: 200, teleRate: 0,   jumpRate: 0,   shotCount: 2, shotSpeed: 5.0 },
     ],
   },
   {
     // Stage 2 — Phantom Warlord (EASY-MED)
+    // Mulai teleport di phase 2, charge di phase 3
     name: 'Phantom Warlord', w: 52, h: 60,
     color: PAL.boss2, dark: PAL.boss2Dark, eye: PAL.boss2Eye,
     swordColor: '#ff44ff',
     phases: [
-      { hpPct: 1.0,  speed: 2.0, attackRate: 85,  chargeRate: 0,   teleRate: 0,   jumpRate: 0, shotCount: 1 },
-      { hpPct: 0.6,  speed: 2.8, attackRate: 60,  chargeRate: 0,   teleRate: 320, jumpRate: 0, shotCount: 2 },
-      { hpPct: 0.3,  speed: 3.6, attackRate: 40,  chargeRate: 200, teleRate: 180, jumpRate: 0, shotCount: 3 },
+      { hpPct: 1.0,  speed: 1.8, attackRate: 90,  chargeRate: 0,   teleRate: 0,   jumpRate: 0,   shotCount: 1, shotSpeed: 4.5 },
+      { hpPct: 0.6,  speed: 2.6, attackRate: 65,  chargeRate: 0,   teleRate: 360, jumpRate: 0,   shotCount: 2, shotSpeed: 5.0 },
+      { hpPct: 0.3,  speed: 3.4, attackRate: 44,  chargeRate: 220, teleRate: 200, jumpRate: 0,   shotCount: 3, shotSpeed: 5.5 },
     ],
   },
   {
     // Stage 3 — Inferno Reaper (MEDIUM)
+    // Lompat aktif dari awal, charge di phase 2+, proyektil lebih cepat
     name: 'Inferno Reaper', w: 56, h: 64,
     color: PAL.boss3, dark: PAL.boss3Dark, eye: PAL.boss3Eye,
     swordColor: '#ff6600',
     phases: [
-      { hpPct: 1.0,  speed: 2.2, attackRate: 75,  chargeRate: 0,   teleRate: 0, jumpRate: 300, shotCount: 1 },
-      { hpPct: 0.55, speed: 3.0, attackRate: 55,  chargeRate: 220, teleRate: 0, jumpRate: 200, shotCount: 3 },
-      { hpPct: 0.25, speed: 4.0, attackRate: 35,  chargeRate: 130, teleRate: 0, jumpRate: 120, shotCount: 4 },
+      { hpPct: 1.0,  speed: 2.0, attackRate: 80,  chargeRate: 0,   teleRate: 0,   jumpRate: 280, shotCount: 1, shotSpeed: 5.0 },
+      { hpPct: 0.55, speed: 2.8, attackRate: 58,  chargeRate: 240, teleRate: 0,   jumpRate: 190, shotCount: 3, shotSpeed: 5.5 },
+      { hpPct: 0.25, speed: 3.8, attackRate: 38,  chargeRate: 140, teleRate: 0,   jumpRate: 110, shotCount: 4, shotSpeed: 6.0 },
     ],
   },
   {
-    // Stage 4 — Void Stalker (MEDIUM)
+    // Stage 4 — Void Stalker (MEDIUM-HARD)
+    // Charge agresif + teleport di phase 2, proyektil spread lebar
     name: 'Void Stalker', w: 52, h: 58,
     color: '#4a2a6a', dark: '#2a1a3a', eye: '#cc44ff',
     swordColor: '#cc44ff',
     phases: [
-      { hpPct: 1.0,  speed: 2.4, attackRate: 72,  chargeRate: 260, teleRate: 0,   jumpRate: 0,   shotCount: 2 },
-      { hpPct: 0.55, speed: 3.2, attackRate: 52,  chargeRate: 180, teleRate: 350, jumpRate: 0,   shotCount: 3 },
-      { hpPct: 0.25, speed: 4.2, attackRate: 34,  chargeRate: 110, teleRate: 200, jumpRate: 0,   shotCount: 4 },
+      { hpPct: 1.0,  speed: 2.2, attackRate: 75,  chargeRate: 240, teleRate: 0,   jumpRate: 0,   shotCount: 2, shotSpeed: 5.0 },
+      { hpPct: 0.55, speed: 3.0, attackRate: 54,  chargeRate: 160, teleRate: 300, jumpRate: 0,   shotCount: 3, shotSpeed: 5.5 },
+      { hpPct: 0.25, speed: 4.0, attackRate: 34,  chargeRate: 100, teleRate: 180, jumpRate: 0,   shotCount: 5, shotSpeed: 6.0 },
     ],
   },
   {
-    // Stage 5 — Iron Colossus (MEDIUM-HARD)
+    // Stage 5 — Iron Colossus (HARD)
+    // Besar & lambat tapi sangat kuat, lompat berat, charge jarak jauh
     name: 'Iron Colossus', w: 60, h: 68,
     color: '#5a5a7a', dark: '#2a2a4a', eye: '#44ccff',
     swordColor: '#44ccff',
     phases: [
-      { hpPct: 1.0,  speed: 2.0, attackRate: 68,  chargeRate: 200, teleRate: 0,   jumpRate: 280, shotCount: 2 },
-      { hpPct: 0.55, speed: 3.0, attackRate: 48,  chargeRate: 140, teleRate: 0,   jumpRate: 180, shotCount: 3 },
-      { hpPct: 0.25, speed: 4.2, attackRate: 30,  chargeRate: 90,  teleRate: 0,   jumpRate: 100, shotCount: 5 },
+      { hpPct: 1.0,  speed: 1.8, attackRate: 70,  chargeRate: 180, teleRate: 0,   jumpRate: 260, shotCount: 2, shotSpeed: 5.5 },
+      { hpPct: 0.5,  speed: 2.8, attackRate: 48,  chargeRate: 120, teleRate: 0,   jumpRate: 170, shotCount: 4, shotSpeed: 6.0 },
+      { hpPct: 0.25, speed: 4.0, attackRate: 28,  chargeRate: 80,  teleRate: 0,   jumpRate: 90,  shotCount: 6, shotSpeed: 6.5 },
     ],
   },
   {
     // Stage 6 — Plague Wraith (HARD)
+    // Teleport sering + charge + proyektil racun (lebih banyak)
     name: 'Plague Wraith', w: 54, h: 62,
     color: '#2a6a2a', dark: '#1a3a1a', eye: '#44ff44',
     swordColor: '#44ff44',
     phases: [
-      { hpPct: 1.0,  speed: 2.6, attackRate: 62,  chargeRate: 180, teleRate: 280, jumpRate: 0,   shotCount: 2 },
-      { hpPct: 0.55, speed: 3.4, attackRate: 44,  chargeRate: 120, teleRate: 180, jumpRate: 0,   shotCount: 4 },
-      { hpPct: 0.25, speed: 4.6, attackRate: 28,  chargeRate: 80,  teleRate: 120, jumpRate: 0,   shotCount: 5 },
+      { hpPct: 1.0,  speed: 2.4, attackRate: 65,  chargeRate: 170, teleRate: 260, jumpRate: 0,   shotCount: 2, shotSpeed: 5.5 },
+      { hpPct: 0.5,  speed: 3.2, attackRate: 44,  chargeRate: 110, teleRate: 170, jumpRate: 0,   shotCount: 4, shotSpeed: 6.0 },
+      { hpPct: 0.25, speed: 4.4, attackRate: 26,  chargeRate: 70,  teleRate: 110, jumpRate: 0,   shotCount: 6, shotSpeed: 6.5 },
     ],
   },
   {
-    // Stage 7 — Storm Titan (HARD)
+    // Stage 7 — Storm Titan (HARD+)
+    // Semua kemampuan aktif: lompat + charge + teleport, proyektil cepat
     name: 'Storm Titan', w: 58, h: 66,
     color: '#2a4a7a', dark: '#1a2a4a', eye: '#44aaff',
     swordColor: '#44aaff',
     phases: [
-      { hpPct: 1.0,  speed: 2.8, attackRate: 58,  chargeRate: 160, teleRate: 0,   jumpRate: 240, shotCount: 3 },
-      { hpPct: 0.5,  speed: 3.8, attackRate: 40,  chargeRate: 100, teleRate: 260, jumpRate: 160, shotCount: 4 },
-      { hpPct: 0.25, speed: 5.0, attackRate: 26,  chargeRate: 70,  teleRate: 150, jumpRate: 100, shotCount: 6 },
+      { hpPct: 1.0,  speed: 2.6, attackRate: 60,  chargeRate: 150, teleRate: 0,   jumpRate: 220, shotCount: 3, shotSpeed: 6.0 },
+      { hpPct: 0.5,  speed: 3.6, attackRate: 40,  chargeRate: 95,  teleRate: 240, jumpRate: 150, shotCount: 5, shotSpeed: 6.5 },
+      { hpPct: 0.25, speed: 5.0, attackRate: 22,  chargeRate: 60,  teleRate: 140, jumpRate: 90,  shotCount: 7, shotSpeed: 7.0 },
     ],
   },
   {
     // Stage 8 — Chaos Demon (VERY HARD)
+    // Sangat agresif, semua kemampuan, proyektil banyak & cepat
     name: 'Chaos Demon', w: 60, h: 68,
     color: '#7a1a1a', dark: '#4a0a0a', eye: '#ff2222',
     swordColor: '#ff4400',
     phases: [
-      { hpPct: 1.0,  speed: 3.0, attackRate: 54,  chargeRate: 140, teleRate: 240, jumpRate: 200, shotCount: 3 },
-      { hpPct: 0.5,  speed: 4.2, attackRate: 36,  chargeRate: 90,  teleRate: 160, jumpRate: 140, shotCount: 5 },
-      { hpPct: 0.25, speed: 5.5, attackRate: 22,  chargeRate: 60,  teleRate: 100, jumpRate: 90,  shotCount: 7 },
+      { hpPct: 1.0,  speed: 2.8, attackRate: 55,  chargeRate: 130, teleRate: 220, jumpRate: 190, shotCount: 3, shotSpeed: 6.5 },
+      { hpPct: 0.5,  speed: 4.0, attackRate: 34,  chargeRate: 82,  teleRate: 145, jumpRate: 130, shotCount: 5, shotSpeed: 7.0 },
+      { hpPct: 0.25, speed: 5.5, attackRate: 18,  chargeRate: 52,  teleRate: 88,  jumpRate: 80,  shotCount: 8, shotSpeed: 7.5 },
     ],
   },
   {
-    // Stage 9 — Abyssal Overlord (VERY HARD)
+    // Stage 9 — Abyssal Overlord (VERY HARD+)
+    // Hampir tidak bisa diprediksi, teleport sangat sering, proyektil 360°
     name: 'Abyssal Overlord', w: 64, h: 72,
     color: '#1a1a5a', dark: '#0a0a2a', eye: '#8844ff',
     swordColor: '#8844ff',
     phases: [
-      { hpPct: 1.0,  speed: 3.2, attackRate: 50,  chargeRate: 120, teleRate: 200, jumpRate: 180, shotCount: 4 },
-      { hpPct: 0.5,  speed: 4.5, attackRate: 32,  chargeRate: 80,  teleRate: 130, jumpRate: 120, shotCount: 6 },
-      { hpPct: 0.2,  speed: 6.0, attackRate: 18,  chargeRate: 50,  teleRate: 80,  jumpRate: 80,  shotCount: 8 },
+      { hpPct: 1.0,  speed: 3.0, attackRate: 50,  chargeRate: 110, teleRate: 185, jumpRate: 170, shotCount: 4, shotSpeed: 7.0 },
+      { hpPct: 0.5,  speed: 4.4, attackRate: 30,  chargeRate: 70,  teleRate: 115, jumpRate: 110, shotCount: 6, shotSpeed: 7.5 },
+      { hpPct: 0.2,  speed: 6.0, attackRate: 16,  chargeRate: 44,  teleRate: 70,  jumpRate: 70,  shotCount: 9, shotSpeed: 8.0 },
     ],
   },
   {
     // Stage 10 — Eternal Destroyer (EXTREME)
+    // Boss terkuat: kecepatan ekstrem, serangan hampir tanpa jeda, proyektil 9-arah
     name: 'Eternal Destroyer', w: 68, h: 76,
     color: '#3a0a0a', dark: '#1a0000', eye: '#ff0000',
     swordColor: '#ff6600',
     phases: [
-      { hpPct: 1.0,  speed: 3.6, attackRate: 44,  chargeRate: 100, teleRate: 160, jumpRate: 160, shotCount: 4 },
-      { hpPct: 0.5,  speed: 5.0, attackRate: 26,  chargeRate: 65,  teleRate: 100, jumpRate: 100, shotCount: 6 },
-      { hpPct: 0.2,  speed: 7.0, attackRate: 14,  chargeRate: 40,  teleRate: 60,  jumpRate: 60,  shotCount: 9 },
+      { hpPct: 1.0,  speed: 3.4, attackRate: 42,  chargeRate: 90,  teleRate: 150, jumpRate: 150, shotCount: 5, shotSpeed: 7.5 },
+      { hpPct: 0.5,  speed: 5.0, attackRate: 24,  chargeRate: 56,  teleRate: 90,  jumpRate: 95,  shotCount: 7, shotSpeed: 8.0 },
+      { hpPct: 0.2,  speed: 7.0, attackRate: 12,  chargeRate: 34,  teleRate: 52,  jumpRate: 55,  shotCount: 10, shotSpeed: 9.0 },
     ],
   },
 ];
@@ -251,7 +263,7 @@ class Boss {
     const cx = this.x + this.w / 2;
     const cy = this.y + this.h / 2;
     const ang = Math.atan2(player.y - cy, player.x - cx);
-    const spd = 5 + this.phase * 0.8;
+    const spd = pd.shotSpeed || (5 + this.phase * 0.8);
     const count = pd.shotCount || 1;
     const spread = Math.PI * 0.18;
 
