@@ -173,8 +173,8 @@ function makeStageObjects(width, stageNum) {
   // ── Moving platforms — makin cepat & jangkauan lebih jauh per stage ──
   const mpSpeed1 = 1.4 + diff * 0.16;
   const mpSpeed2 = 1.6 + diff * 0.18;
-  const mpRange1 = 4 + Math.floor(diff / 3);
-  const mpRange2 = 3 + Math.floor(diff / 2);
+  const mpRange1 = 2 + Math.floor(diff / 4);   // range lebih kecil agar tidak terlalu jauh dari pit
+  const mpRange2 = 2 + Math.floor(diff / 3);
   objs.push({ type: 'mplatform', x: Math.floor(width * 0.38), y: 9, range: mpRange1, speed: mpSpeed1 });
   objs.push({ type: 'mplatform', x: Math.floor(width * 0.58), y: 7, range: mpRange2, speed: mpSpeed2 });
 
@@ -273,8 +273,8 @@ const BASE_LEVELS = [
       { type: 'hspike', x: 25, y: 7 }, { type: 'hspike', x: 26, y: 7 },
       { type: 'hspike', x: 38, y: 7 }, { type: 'hspike', x: 39, y: 7 },
       { type: 'checkpoint', x: 24, y: 9 }, { type: 'checkpoint', x: 40, y: 9 },
-      { type: 'mplatform', x: 33, y: 8, range: 4, speed: 1.2 },
-      { type: 'mplatform', x: 50, y: 7, range: 3, speed: 1.8 },
+      { type: 'mplatform', x: 33, y: 8, range: 3, speed: 1.2 },
+      { type: 'mplatform', x: 50, y: 7, range: 2, speed: 1.8 },
       { type: 'saw', x: 18, y: 10, range: 5, speed: 1.5, axis: 'x' },
       { type: 'saw', x: 47, y: 8,  range: 3, speed: 2.0, axis: 'x' },
       { type: 'bossgate', x: 52, y: 9 },
@@ -336,9 +336,9 @@ const BASE_LEVELS = [
       // dan jauh dari saw (x:16, x:35, x:50)
       // CP1: x:7 (sebelum spike pertama), CP2: x:30 (antara spike x:25 dan x:38, area bersih)
       { type: 'checkpoint', x: 7,  y: 10 }, { type: 'checkpoint', x: 30, y: 10 },
-      { type: 'mplatform', x: 26, y: 9, range: 5, speed: 1.5 },
-      { type: 'mplatform', x: 48, y: 8, range: 4, speed: 2   },
-      { type: 'mplatform', x: 59, y: 7, range: 3, speed: 2.5 },
+      { type: 'mplatform', x: 26, y: 9, range: 3, speed: 1.5 },
+      { type: 'mplatform', x: 48, y: 8, range: 3, speed: 2   },
+      { type: 'mplatform', x: 59, y: 7, range: 2, speed: 2.5 },
       { type: 'saw', x: 16, y: 11, range: 4, speed: 2,   axis: 'x' },
       { type: 'saw', x: 35, y: 11, range: 5, speed: 2.5, axis: 'x' },
       { type: 'saw', x: 50, y: 5,  range: 3, speed: 3,   axis: 'y' },
@@ -405,10 +405,10 @@ const BASE_LEVELS = [
       // dan jauh dari saw (x:8, x:27, x:40, x:58)
       // CP1: x:16 (antara spike x:11 dan x:22, area bersih), CP2: x:43 (antara spike x:37 dan x:48)
       { type: 'checkpoint', x: 16, y: 10 }, { type: 'checkpoint', x: 43, y: 10 },
-      { type: 'mplatform', x: 15, y: 10, range: 4, speed: 2   },
-      { type: 'mplatform', x: 32, y: 9,  range: 3, speed: 2.5 },
-      { type: 'mplatform', x: 55, y: 8,  range: 4, speed: 3   },
-      { type: 'mplatform', x: 63, y: 7,  range: 3, speed: 2   },
+      { type: 'mplatform', x: 15, y: 10, range: 3, speed: 2   },
+      { type: 'mplatform', x: 32, y: 9,  range: 2, speed: 2.5 },
+      { type: 'mplatform', x: 55, y: 8,  range: 3, speed: 3   },
+      { type: 'mplatform', x: 63, y: 7,  range: 2, speed: 2   },
       { type: 'saw', x: 8,  y: 11, range: 3, speed: 2.5, axis: 'x' },
       { type: 'saw', x: 27, y: 11, range: 4, speed: 3,   axis: 'x' },
       { type: 'saw', x: 40, y: 5,  range: 3, speed: 3.5, axis: 'y' },

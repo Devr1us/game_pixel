@@ -59,7 +59,7 @@ class MovingPlatform {
     this.x = x * TILE;
     this.y = y * TILE;
     this.startX = this.x;
-    this.w = TILE * 3;
+    this.w = TILE * 4;   // diperlebar: 4 tile agar lebih mudah dijangkau saat dash
     this.h = TILE / 2;
     this.range = range * TILE;
     this.speed = speed;
