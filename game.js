@@ -235,6 +235,7 @@ function initLevel(levelIdx) {
   const saws        = [];
   const mplatforms  = [];
   const checkpoints = [];
+  const minions     = [];
   let   bossgate    = null;
   let   portal      = null;
   const boss        = new Boss(BOSS_DEFS[def.boss.id], levelIdx);
@@ -248,6 +249,7 @@ function initLevel(levelIdx) {
       case 'saw':          saws.push(new Saw(o.x, o.y, o.range, o.speed, o.axis)); break;
       case 'mplatform':    mplatforms.push(new MovingPlatform(o.x, o.y, o.range, o.speed)); break;
       case 'checkpoint':   checkpoints.push(new Checkpoint(o.x, o.y)); break;
+      case 'minion':       minions.push(new Minion(o.x, o.y, o.speed, o.hp)); break;
       case 'bossgate':     bossgate = new BossGate(o.x, o.y); break;
       case 'portal':       portal   = new Portal(o.x, o.y); break;
     }
@@ -256,7 +258,7 @@ function initLevel(levelIdx) {
   currentLevel = {
     def, map,
     coins, spikes, hspikes, fspikes, saws,
-    mplatforms, checkpoints, bossgate, portal, boss,
+    mplatforms, checkpoints, minions, bossgate, portal, boss,
     bossDefeated: false,
     elapsedMs: 0,
     coinTotal: coins.length,
@@ -329,6 +331,11 @@ function updateGame(dt) {
   cl.checkpoints.forEach(cp => cp.update(player));
   if (cl.bossgate) cl.bossgate.update(player, cl.boss);
   if (!player.dead) cl.boss.update(cl.map, player);
+  // Minion update (stage 6–10)
+  if (!player.dead && cl.minions) {
+    cl.minions.forEach(m => m.update(cl.map, player));
+    cl.minions = cl.minions.filter(m => m.alive || m.deathAnim > 0);
+  }
 
   if (cl.portal && !player.dead) {
     const finished = cl.portal.update(player, cl.bossDefeated);
@@ -347,6 +354,8 @@ function drawObjects() {
   cl.checkpoints.forEach(cp => cp.draw());
   if (cl.bossgate) cl.bossgate.draw();
   if (cl.portal)   cl.portal.draw(cl.bossDefeated);
+  // Minion draw (stage 6–10)
+  if (cl.minions) cl.minions.forEach(m => m.draw());
 }
 
 function drawPaused() {

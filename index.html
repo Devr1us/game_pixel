@@ -43,6 +43,8 @@
           <div class="tip">🏁 Touch <b>yellow checkpoints</b> to save progress</div>
           <div class="tip">⚔ <b>Boss</b> attacks reduce 25 HP each hit</div>
           <div class="tip">❤ You have <b>100 HP per life</b> and <b>3 lives</b> total — game over at 0!</div>
+          <div class="tip">⭐ Bintang ke-3: <b>tidak kehilangan 2 nyawa</b> (sisa nyawa ≥ 2)</div>
+          <div class="tip">👾 Stage 6–10: waspada <b>minion</b> yang berpatroli di lantai!</div>
           <div class="tip">⏱ Use <b>Shift Dodge</b> to avoid attacks and stay safe!</div>
           <div class="tip">🪙 Collect <b>coins</b> for bonus score!</div>
         </div>
@@ -119,7 +121,7 @@
         <div class="clear-conditions">
           <div class="clear-condition" id="lc-cond-time">⏱ Waktu di bawah 1:30: -</div>
           <div class="clear-condition" id="lc-cond-coins">🪙 Kumpulkan semua koin: -</div>
-          <div class="clear-condition" id="lc-cond-perfect">❤ Nyawa penuh tanpa mati: -</div>
+          <div class="clear-condition" id="lc-cond-perfect">❤ Tidak kehilangan 2 nyawa: -</div>
         </div>
         <div class="clear-condition lock-note hidden" id="lc-lock-note">🔒 Stage berikutnya terkunci — butuh minimal 2 bintang di stage ini.</div>
         <button id="btn-nextlevel" class="pixel-btn">NEXT LEVEL ▶</button>
@@ -188,6 +190,7 @@
 
   <!-- 6. Characters: Player, Boss (butuh PAL, LEVELS, TILE, dll) -->
   <script src="assets/characters/player.js"></script>
+  <script src="assets/characters/minion.js"></script>
   <script src="assets/characters/boss.js"></script>
 
   <!-- 7. UI: HUD canvas + HTML, Screens + Stage Select -->

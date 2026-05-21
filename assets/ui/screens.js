@@ -127,7 +127,8 @@ function computeLevelStars() {
   if (!currentLevel || !player) return { timeStar: false, coinsStar: false, perfectStar: false, total: 0 };
   const timeStar    = currentLevel.elapsedMs <= 90000;
   const coinsStar   = currentLevel.coinTotal === 0 || currentLevel.coins.every(c => c.collected);
-  const perfectStar = G.lives === 3;
+  // perfectStar: boleh kehilangan max 1 nyawa (masih punya ≥ 2 nyawa saat selesai)
+  const perfectStar = G.lives >= 2;
   return {
     timeStar, coinsStar, perfectStar,
     total: [timeStar, coinsStar, perfectStar].filter(Boolean).length,
@@ -149,7 +150,7 @@ function renderLevelClearStars() {
   if (starCount)     starCount.textContent    = `${stars.total}/3`;
   if (statusTime)    statusTime.textContent   = `⏱ Waktu di bawah 1:30: ${stars.timeStar    ? 'TERCAPAI' : 'GAGAL'}`;
   if (statusCoins)   statusCoins.textContent  = `🪙 Kumpulkan semua koin: ${stars.coinsStar  ? 'TERCAPAI' : 'GAGAL'}`;
-  if (statusPerfect) statusPerfect.textContent = `❤ Nyawa penuh tanpa mati: ${stars.perfectStar ? 'TERCAPAI' : 'GAGAL'}`;
+  if (statusPerfect) statusPerfect.textContent = `❤ Tidak kehilangan 2 nyawa: ${stars.perfectStar ? 'TERCAPAI' : 'GAGAL'}`;
 }
 
 // ─── TITLE PARTICLES ─────────────────────────────────────────
