@@ -193,7 +193,7 @@ class Boss {
         currentLevel.bossDefeated = true;
         hideBossBar();
         Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 30, PAL.gold, 0, -3, 8, 50);
-        setTimeout(() => showScreen('levelclear'), 1200);
+        setTimeout(() => nextLevel(), 1200);
       }
       return;
     }

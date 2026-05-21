@@ -492,9 +492,9 @@ function nextLevel() {
   const lockNote   = document.getElementById('lc-lock-note');
 
   if (btnNext) {
-    btnNext.disabled = !canGoNext;
+    btnNext.disabled = false;
     btnNext.classList.toggle('danger', !canGoNext);
-    btnNext.textContent = canGoNext ? 'NEXT LEVEL ▶' : 'STAGE TERKUNCI';
+    btnNext.textContent = canGoNext ? 'NEXT LEVEL ▶' : 'RESTART';
   }
   if (lockNote) lockNote.classList.toggle('hidden', canGoNext || nextIdx >= LEVELS.length);
 
@@ -662,8 +662,17 @@ function _bindUIAndBoot() {
 
   document.getElementById('btn-nextlevel').addEventListener('click', () => {
     const stars = computeLevelStars();
-    if (stars.total < UNLOCK_STARS_REQUIRED) return;
-    startLevel(G.currentLevel + 1);
+    if (stars.total < UNLOCK_STARS_REQUIRED) {
+      startLevel(G.currentLevel);
+    } else {
+      startLevel(G.currentLevel + 1);
+    }
+  });
+
+  document.getElementById('btn-pause-retry').addEventListener('click', () => {
+    G.paused = false;
+    document.getElementById('pause-overlay').classList.add('hidden');
+    startLevel(G.currentLevel);
   });
 
   document.getElementById('btn-stage-select').addEventListener('click', () => showScreen('stages'));
