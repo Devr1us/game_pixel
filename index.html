@@ -83,12 +83,25 @@
         </div>
         <div id="hud-right">
           <div id="hud-score">SCORE: <span id="hud-score-num">0</span></div>
+          <div id="hud-highscore">BEST: <span id="hud-highscore-num">0</span></div>
           <div id="hud-coins">🪙 <span id="hud-coin-num">0</span></div>
           <div id="hud-time">Waktu: 1:30</div>
           <button id="btn-pause-hud" class="pixel-btn hud-pause-btn" title="Pause (ESC)">⏸</button>
         </div>
       </div>
       <canvas id="game-canvas"></canvas>
+      <!-- Touch Controls -->
+      <div id="touch-controls">
+        <div id="touch-left-group">
+          <button class="touch-btn" id="touch-left">◀</button>
+          <button class="touch-btn" id="touch-right">▶</button>
+        </div>
+        <div id="touch-right-group">
+          <button class="touch-btn touch-jump" id="touch-jump">▲</button>
+          <button class="touch-btn touch-attack" id="touch-attack">⚔</button>
+          <button class="touch-btn touch-dodge" id="touch-dodge">💨</button>
+        </div>
+      </div>
       <div id="pause-overlay" class="hidden">
         <div class="pause-box">
           <div class="pause-title">⏸ PAUSED</div>
@@ -104,6 +117,8 @@
         <div class="gameover-skull">☠</div>
         <div class="gameover-title">GAME OVER</div>
         <div class="gameover-score">Score: <span id="go-score">0</span></div>
+        <div class="gameover-highscore">Best: <span id="go-highscore">0</span></div>
+        <div class="gameover-newhighscore hidden" id="go-newhighscore">🏆 NEW HIGH SCORE!</div>
         <button id="btn-retry" class="pixel-btn">↺ RETRY</button>
         <button id="btn-go-menu" class="pixel-btn secondary">⌂ MENU</button>
       </div>
@@ -135,6 +150,7 @@
         <div class="victory-title">YOU WIN!</div>
         <div class="victory-sub">All Bosses Defeated!</div>
         <div class="victory-score">Final Score: <span id="vic-score">0</span></div>
+        <div class="victory-highscore">🏆 Best: <span id="vic-highscore">0</span></div>
         <button id="btn-vic-stages" class="pixel-btn">STAGE SELECT</button>
         <button id="btn-vic-menu" class="pixel-btn">⌂ MAIN MENU</button>
       </div>

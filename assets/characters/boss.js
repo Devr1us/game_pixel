@@ -252,10 +252,20 @@ class Boss {
 
     const ab = player.attackBox;
     if (ab && player.attacking && this.iframes <= 0 && rectsOverlap(ab, this)) {
-      this.hp -= 10; this.iframes = 20; G.score += 50; updateHUD();
+      this.hp -= 10; this.iframes = 20; G.score += 50;
+      addCombo();
+      SFX.bossHit();
+      ScreenShake.trigger(4, 8);
+      updateHUD();
       Particles.emit(this.x + this.w / 2, this.y + 10, 6, PAL.gold, 0, -2, 3, 20);
       updateBossBar(this.hp, this.maxHp);
-      if (this.hp <= 0) { this.hp = 0; this.deathAnim = 60; G.score += 500; updateHUD(); }
+      if (this.hp <= 0) {
+        this.hp = 0; this.deathAnim = 60; G.score += 500;
+        SFX.bossDie();
+        ScreenShake.trigger(14, 25);
+        checkHighScore();
+        updateHUD();
+      }
     }
   }
 

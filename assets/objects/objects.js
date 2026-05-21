@@ -28,6 +28,7 @@ class Coin {
       this.collected = true;
       G.coins++;
       G.score += 30;
+      SFX.coin();
       updateHUD();
       Particles.emit(this.x + 8, this.y + 8, 6, PAL.gold, 0, -2, 2, 20);
     }
@@ -121,6 +122,7 @@ class Checkpoint {
       player.checkpointX = this.x - 2;
       player.checkpointY = this.y - 2;
       showCheckpointPopup();
+      SFX.checkpoint();
       G.score += 100;
       updateHUD();
       Particles.emit(this.x + 6, this.y, 10, PAL.gold, 0, -3, 3, 30);

@@ -32,6 +32,20 @@ function showScreen(name) {
       Audio.playTitle();
     }
   }
+
+  // Update high score display on gameover & victory
+  if (name === 'gameover') {
+    const el2 = document.getElementById('go-score');
+    if (el2) el2.textContent = G.score;
+    const hsEl = document.getElementById('go-highscore');
+    if (hsEl) hsEl.textContent = G.highScore;
+    const newHsEl = document.getElementById('go-newhighscore');
+    if (newHsEl) newHsEl.classList.toggle('hidden', G.score < G.highScore || G.score === 0);
+  }
+  if (name === 'victory') {
+    const hsEl = document.getElementById('vic-highscore');
+    if (hsEl) hsEl.textContent = G.highScore;
+  }
   
   if (name === 'levelclear') renderLevelClearStars();
   if (name === 'stages')     renderStageSelect();

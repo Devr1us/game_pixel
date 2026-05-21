@@ -67,9 +67,11 @@ class Player {
     if (jumpKey) {
       if (this.onGround) {
         this.vy = jumpPow; this.jumps = 1;
+        SFX.jump();
         Particles.emit(this.x + this.w / 2, this.y + this.h, 4, PAL.groundTop, 0, -1, 2, 15);
       } else if (this.jumps < this.maxJumps) {
         this.vy = jumpPow * 0.85; this.jumps++;
+        SFX.jump();
         Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 6, PAL.punchGlow, 0, 0, 3, 20);
       }
     }
@@ -79,6 +81,7 @@ class Player {
       this.attacking = true;
       this.attackTimer = 18;
       this.attackCooldown = 24;
+      SFX.attack();
       G.mouseClicked = false;
     }
     if (this.attackTimer > 0) this.attackTimer--;
@@ -92,6 +95,7 @@ class Player {
         this.dodgeTimer = 20;
         this.dodgeCooldown = 50;
         this.iframes = 25;
+        SFX.dodge();
         Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 8, PAL.punchGlow, 0, 0, 2, 15);
       }
     }
@@ -175,17 +179,23 @@ class Player {
     this.hp -= 25;
     this.iframes = 90;
     flashDamage();
+    ScreenShake.trigger(6, 12);
+    resetCombo();
+    SFX.hit();
     Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 10, '#e84040', 0, -2, 4, 25);
     updateHUD();
     if (this.hp <= 0) {
       this.hp = 0;
       G.lives--;
       updateHUD();
+      checkHighScore();
       if (G.lives <= 0) {
         this.dead = true;
+        SFX.playerDie();
         setTimeout(() => showScreen('gameover'), 800);
       } else {
         this.dead = true;
+        SFX.playerDie();
         setTimeout(() => this.respawn(), 600);
       }
     }
@@ -196,9 +206,13 @@ class Player {
     this.dead = true;
     Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 14, '#e84040', 0, -3, 5, 35);
     flashDamage();
+    ScreenShake.trigger(8, 15);
+    resetCombo();
+    SFX.playerDie();
     G.lives--;
     this.hp = 0;
     updateHUD();
+    checkHighScore();
     if (G.lives <= 0) {
       setTimeout(() => showScreen('gameover'), 900);
     } else {

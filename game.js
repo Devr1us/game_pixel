@@ -170,9 +170,117 @@ let G = {
   justPressed: {},
   mouseClicked: false,
   tick: 0,
+  // Combo system
+  combo: 0,
+  comboTimer: 0,
+  // High score
+  highScore: parseInt(localStorage.getItem('tpg_highscore') || '0', 10),
 };
 
-// ─── PARTICLE SYSTEM ────────────────────────────────────────
+// ─── SCREEN SHAKE ───────────────────────────────────────────
+const ScreenShake = {
+  intensity: 0,
+  duration: 0,
+  x: 0,
+  y: 0,
+  trigger(intensity, duration) {
+    // Ambil yang lebih kuat jika sudah ada shake aktif
+    if (intensity > this.intensity) {
+      this.intensity = intensity;
+      this.duration  = duration;
+    }
+  },
+  update() {
+    if (this.duration > 0) {
+      this.x = (Math.random() - 0.5) * this.intensity * 2;
+      this.y = (Math.random() - 0.5) * this.intensity * 2;
+      this.intensity *= 0.85; // decay
+      this.duration--;
+      if (this.duration <= 0) { this.x = 0; this.y = 0; this.intensity = 0; }
+    } else {
+      this.x = 0; this.y = 0;
+    }
+  }
+};
+
+// ─── SFX SYSTEM (Web Audio API) ─────────────────────────────
+const SFX = {
+  ctx: null,
+  muted: false,
+
+  init() {
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { this.ctx = null; }
+  },
+
+  // Buat nada pendek dengan oscillator
+  _play(freq, type, duration, vol = 0.18, freqEnd = null) {
+    if (!this.ctx || this.muted) return;
+    try {
+      const osc  = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      if (freqEnd !== null) osc.frequency.linearRampToValueAtTime(freqEnd, this.ctx.currentTime + duration);
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      osc.start(this.ctx.currentTime);
+      osc.stop(this.ctx.currentTime + duration);
+    } catch(e) {}
+  },
+
+  jump()     { this._play(320, 'square', 0.12, 0.12, 520); },
+  attack()   { this._play(180, 'sawtooth', 0.08, 0.14, 80); },
+  hit()      { this._play(120, 'square', 0.15, 0.20, 60); },
+  coin()     { this._play(880, 'sine', 0.10, 0.12, 1100); },
+  bossHit()  { this._play(200, 'sawtooth', 0.10, 0.18, 100); },
+  bossDie()  {
+    this._play(80,  'sawtooth', 0.5, 0.22, 30);
+    setTimeout(() => this._play(440, 'square', 0.3, 0.15, 880), 200);
+  },
+  playerDie(){ this._play(200, 'square', 0.4, 0.20, 50); },
+  dodge()    { this._play(600, 'sine', 0.08, 0.10, 400); },
+  checkpoint(){ this._play(660, 'sine', 0.15, 0.14, 880); setTimeout(() => this._play(880, 'sine', 0.15, 0.14, 1100), 120); },
+  combo(n)   {
+    const f = 440 + n * 80;
+    this._play(f, 'square', 0.12, 0.16, f + 200);
+  },
+};
+
+// ─── COMBO SYSTEM ───────────────────────────────────────────
+const COMBO_TIMEOUT = 120; // frame sebelum combo reset
+function addCombo() {
+  G.combo++;
+  G.comboTimer = COMBO_TIMEOUT;
+  SFX.combo(Math.min(G.combo, 10));
+  // Bonus score per combo
+  const bonus = G.combo >= 5 ? 100 : G.combo >= 3 ? 50 : 0;
+  if (bonus > 0) {
+    G.score += bonus;
+    updateHUD();
+  }
+}
+function resetCombo() {
+  G.combo = 0;
+  G.comboTimer = 0;
+}
+function updateCombo() {
+  if (G.comboTimer > 0) {
+    G.comboTimer--;
+    if (G.comboTimer <= 0) resetCombo();
+  }
+}
+
+// ─── HIGH SCORE ──────────────────────────────────────────────
+function checkHighScore() {
+  if (G.score > G.highScore) {
+    G.highScore = G.score;
+    localStorage.setItem('tpg_highscore', String(G.highScore));
+  }
+}
 const Particles = {
   pool: [],
   emit(x, y, count, color, vx = 0, vy = 0, spread = 3, life = 30) {
@@ -293,10 +401,17 @@ function gameLoop(ts) {
   if (currentLevel) currentLevel.elapsedMs += frameMs;
   G.tick++;
 
+  updateCombo();
+  ScreenShake.update();
   updateGame(dt);
   updateHUD();
 
   drawBackground();
+  // Screen shake offset
+  if (ScreenShake.x !== 0 || ScreenShake.y !== 0) {
+    ctx.save();
+    ctx.translate(ScreenShake.x, ScreenShake.y);
+  }
   // Terapkan zoom — semua objek world digambar dalam koordinat world-space
   ctx.save();
   ctx.scale(Camera.zoom, Camera.zoom);
@@ -306,6 +421,7 @@ function gameLoop(ts) {
   player.draw();
   currentLevel.boss.draw();
   ctx.restore();
+  if (ScreenShake.x !== 0 || ScreenShake.y !== 0) ctx.restore();
   // HUD digambar di atas zoom (koordinat layar)
   drawHUDCanvas(player);
 
@@ -405,6 +521,7 @@ function startLevel(idx) {
   Particles.pool = [];
   // Reset nyawa ke 3 setiap kali mulai stage baru (dari stage select, retry, atau next level)
   G.lives = 3;
+  resetCombo();
   initLevel(idx);
   showScreen('game');
   G.running = true;
@@ -439,6 +556,52 @@ window.addEventListener('keyup', e => {
 document.addEventListener('click', () => {
   if (G.running && !G.paused) G.mouseClicked = true;
 });
+
+// ─── TOUCH CONTROLS ──────────────────────────────────────────
+function _initTouchControls() {
+  const map = {
+    'touch-left':   'ArrowLeft',
+    'touch-right':  'ArrowRight',
+    'touch-jump':   'ArrowUp',
+  };
+
+  Object.entries(map).forEach(([id, code]) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (!G.keys[code]) G.justPressed[code] = true;
+      G.keys[code] = true;
+    }, { passive: false });
+    btn.addEventListener('touchend', e => {
+      e.preventDefault();
+      G.keys[code] = false;
+    }, { passive: false });
+  });
+
+  // Attack button
+  const attackBtn = document.getElementById('touch-attack');
+  if (attackBtn) {
+    attackBtn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (G.running && !G.paused) G.mouseClicked = true;
+    }, { passive: false });
+  }
+
+  // Dodge button
+  const dodgeBtn = document.getElementById('touch-dodge');
+  if (dodgeBtn) {
+    dodgeBtn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (!G.keys['ShiftLeft']) G.justPressed['ShiftLeft'] = true;
+      G.keys['ShiftLeft'] = true;
+    }, { passive: false });
+    dodgeBtn.addEventListener('touchend', e => {
+      e.preventDefault();
+      G.keys['ShiftLeft'] = false;
+    }, { passive: false });
+  }
+}
 
 window.addEventListener('resize', () => {
   resizeCanvas();
@@ -512,4 +675,6 @@ function _bindUIAndBoot() {
   spawnTitleParticles();
   showScreen('title');
   Audio.init();
+  SFX.init();
+  _initTouchControls();
 }

@@ -52,9 +52,34 @@ function drawHUDCanvas(player) {
     ctx.fillText(Math.ceil(player.hp) + '/' + player.maxHp, barX + barWidth / 2, barY + barHeight - 1);
   }
 
+  // ── Combo display ──────────────────────────────────────────
+  if (G.combo >= 2) {
+    const alpha = Math.min(1, G.comboTimer / 30);
+    const scale = 1 + Math.min(0.5, (G.combo - 2) * 0.08);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'left';
+    // Shadow
+    ctx.font = `bold ${Math.floor(18 * scale)}px Arial`;
+    ctx.fillStyle = '#000';
+    ctx.fillText(`${G.combo}x COMBO`, 22, 52);
+    // Warna berdasarkan combo level
+    const comboColor = G.combo >= 10 ? '#ff2222'
+                     : G.combo >= 7  ? '#ff6600'
+                     : G.combo >= 5  ? '#ffcc00'
+                     : G.combo >= 3  ? '#44ff88'
+                     : '#ffffff';
+    ctx.fillStyle = comboColor;
+    ctx.shadowBlur = G.combo >= 5 ? 12 : 0;
+    ctx.shadowColor = comboColor;
+    ctx.fillText(`${G.combo}x COMBO`, 21, 51);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
   // Obor dekoratif di sudut atas
-  drawTorch(20, 60);
-  drawTorch(GAME_W - 30, 60);
+  drawTorch(20, 70);
+  drawTorch(GAME_W - 30, 70);
 }
 
 // ─── TORCH ───────────────────────────────────────────────────
@@ -78,6 +103,10 @@ function drawTorch(x, y) {
 function updateHUD() {
   document.getElementById('hud-score-num').textContent = G.score;
   document.getElementById('hud-coin-num').textContent  = G.coins;
+
+  // High score
+  const hsEl = document.getElementById('hud-highscore-num');
+  if (hsEl) hsEl.textContent = G.highScore;
 
   const livesEl = document.getElementById('hud-lives');
   livesEl.innerHTML = '';
