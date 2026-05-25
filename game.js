@@ -321,6 +321,28 @@ function rectsOverlap(a, b) {
          a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
+// Koreksi peletakan spike lantai:
+// - Jika spike diletakkan tepat 1 row di bawah platform/ground (row itu biasanya '0'),
+//   spike jadi "tenggelam" dan tidak akan kena karena player berhenti di tile solid.
+//   Solusi: geser spike sedikit ke atas (pixel) agar hitbox muncul di atas permukaan.
+function fixFloorSpikePlacement(col, row, map) {
+  let y = row;
+  let yOffsetPx = 0;
+
+  // Case 1: spike berada di bawah tile solid, tapi row spike sendiri bukan solid.
+  // Biasanya terjadi pada spike yang "menempel" di platform tipis.
+  if (y > 0 && map.isSolid(col, y - 1) && !map.isSolid(col, y)) {
+    // Naik sedikit (12px) → cukup untuk membuat player overlap hitbox saat menginjak.
+    yOffsetPx = -12;
+  }
+
+  // Case 2: spike diletakkan di dalam tumpukan tile solid (mis. ground tebal).
+  // Pindahkan ke permukaan paling atas pada kolom tsb.
+  while (y > 0 && map.isSolid(col, y) && map.isSolid(col, y - 1)) y--;
+
+  return { y, yOffsetPx };
+}
+
 // ─── CURRENT LEVEL STATE ─────────────────────────────────────
 let currentLevel = {};
 let player;
@@ -353,7 +375,11 @@ function initLevel(levelIdx) {
   def.objects.forEach(o => {
     switch (o.type) {
       case 'coin':         coins.push(new Coin(o.x, o.y)); break;
-      case 'spike':        spikes.push(new Spike(o.x, o.y, false)); break;
+      case 'spike': {
+        const fixed = fixFloorSpikePlacement(o.x, o.y, map);
+        spikes.push(new Spike(o.x, fixed.y, false, fixed.yOffsetPx));
+        break;
+      }
       case 'hspike':       hspikes.push(new Spike(o.x, o.y, true)); break;
       case 'fallingspike': fspikes.push(new FallingSpike(o.x, o.y, o.period)); break;
       case 'saw':          saws.push(new Saw(o.x, o.y, o.range, o.speed, o.axis)); break;

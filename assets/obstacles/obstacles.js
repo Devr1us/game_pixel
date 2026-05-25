@@ -12,14 +12,16 @@
 // hanging=false → duri lantai (mengarah ke atas)
 // hanging=true  → duri langit-langit (mengarah ke bawah)
 class Spike {
-  constructor(x, y, hanging) {
+  // yOffsetPx: koreksi kecil (pixel) jika spike terlihat "tenggelam"
+  //            (mis. spike diletakkan 1 row di bawah platform).
+  constructor(x, y, hanging, yOffsetPx = 0) {
     this.x = x * TILE;
     if (hanging) {
-      this.y = y * TILE;
+      this.y = y * TILE + yOffsetPx;
       this.w = TILE;
       this.h = 16;
     } else {
-      this.y = y * TILE - 24;
+      this.y = y * TILE - 24 + yOffsetPx;
       this.w = TILE;
       this.h = 24;
     }
