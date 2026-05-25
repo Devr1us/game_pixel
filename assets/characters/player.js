@@ -21,6 +21,10 @@ class Player {
     this.attacking = false;
     this.attackTimer = 0;
     this.attackCooldown = 0;
+    this.attackDamage = 10;
+    this.attackCharged = false;
+    this.chargeTimer = 0;
+    this.chargeReady = false;
     this.iframes = 0;
     this.dead = false;
     this.walkAnim = 0;
@@ -42,8 +46,8 @@ class Player {
     this.iframes = 120;
     this.hp = this.maxHp;
     this.lavaTime = 0;
-    Camera.x = Math.max(0, this.x - canvas.width / 2);
-    Camera.y = Math.max(0, this.y - canvas.height / 2);
+    Camera.x = Math.min(Camera.maxX, Math.max(0, this.x - Camera.viewW / 2));
+    Camera.y = Math.min(Camera.maxY, Math.max(0, this.y - Camera.viewH / 2));
   }
 
   update(map, objects, dt = 1) {
@@ -76,16 +80,38 @@ class Player {
       }
     }
 
-    // Attack
-    if ((G.justPressed['KeyJ'] || G.justPressed['KeyZ'] || G.mouseClicked) && this.attackCooldown <= 0) {
+    // Attack: tap/click for quick punch, hold J/Z for charged punch.
+    const attackHeld = G.keys['KeyJ'] || G.keys['KeyZ'];
+    if (!this.attacking && this.attackCooldown <= 0 && attackHeld) {
+      this.chargeTimer = Math.min(45, this.chargeTimer + 1);
+      this.chargeReady = this.chargeTimer >= 24;
+      if (this.chargeReady && this.chargeTimer % 8 === 0) {
+        Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 2, PAL.punchGlow, 0, -1, 2, 12);
+      }
+    }
+    const attackReleased = this.chargeTimer > 0 && !attackHeld;
+    if ((G.mouseClicked || attackReleased) && this.attackCooldown <= 0) {
+      const charged = this.chargeReady;
       this.attacking = true;
-      this.attackTimer = 18;
-      this.attackCooldown = 24;
+      this.attackCharged = charged;
+      this.attackDamage = charged ? 25 : 10;
+      this.attackTimer = charged ? 24 : 18;
+      this.attackCooldown = charged ? 38 : 24;
+      this.chargeTimer = 0;
+      this.chargeReady = false;
       SFX.attack();
+      if (charged) {
+        ScreenShake.trigger(3, 8);
+        Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 10, PAL.punchGlow, this.facing * 1.5, -1, 3, 22);
+      }
       G.mouseClicked = false;
     }
     if (this.attackTimer > 0) this.attackTimer--;
-    else this.attacking = false;
+    else {
+      this.attacking = false;
+      this.attackCharged = false;
+      this.attackDamage = 10;
+    }
     if (this.attackCooldown > 0) this.attackCooldown--;
 
     // Dodge
@@ -94,7 +120,7 @@ class Player {
         this.dodging = true;
         this.dodgeTimer = 20;
         this.dodgeCooldown = 50;
-        this.iframes = 25;
+        this.iframes = 90;
         SFX.dodge();
         Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 8, PAL.punchGlow, 0, 0, 2, 15);
       }
@@ -127,12 +153,8 @@ class Player {
     if (inPit) { this.takeDamage('pit'); return; }
 
     if (inLava) {
-      if (G.currentLevel === 2) {
-        this.lavaTime += dt;
-        if (this.lavaTime >= 60) { this.takeDamage('lava'); this.lavaTime -= 60; }
-      } else {
-        this.takeDamage('lava');
-      }
+      this.lavaTime += dt;
+      if (this.lavaTime >= 60) { this.takeDamage('lava'); this.lavaTime -= 60; }
     } else {
       this.lavaTime = 0;
     }
@@ -192,7 +214,11 @@ class Player {
       if (G.lives <= 0) {
         this.dead = true;
         SFX.playerDie();
-        setTimeout(() => showScreen('gameover'), 800);
+        setTimeout(() => {
+          G.running = false;
+          cancelAnimationFrame(animId);
+          showScreen('gameover');
+        }, 800);
       } else {
         this.dead = true;
         SFX.playerDie();
@@ -201,28 +227,13 @@ class Player {
     }
   }
 
-  die() {
-    if (this.dead) return;
-    this.dead = true;
-    Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 14, '#e84040', 0, -3, 5, 35);
-    flashDamage();
-    ScreenShake.trigger(8, 15);
-    resetCombo();
-    SFX.playerDie();
-    G.lives--;
-    this.hp = 0;
-    updateHUD();
-    checkHighScore();
-    if (G.lives <= 0) {
-      setTimeout(() => showScreen('gameover'), 900);
-    } else {
-      setTimeout(() => this.respawn(), 700);
-    }
-  }
-
   get attackBox() {
     if (!this.attacking) return null;
-    const ax = this.facing === 1 ? this.x + this.w : this.x - 20;
+    const ax = this.facing === 1 ? this.x + this.w - 2 : this.x - 18;
+    if (this.attackCharged) {
+      const cx = this.facing === 1 ? this.x + this.w - 2 : this.x - 30;
+      return { x: cx, y: this.y + 6, w: 32, h: 22 };
+    }
     return { x: ax, y: this.y + 10, w: 20, h: 16 };
   }
 
@@ -285,8 +296,10 @@ class Player {
 
     // Punch / attack
     if (this.attacking) {
-      const prog = 1 - (this.attackTimer / 18);
-      const ext  = prog < 0.5 ? prog * 18 : (1 - prog) * 18;
+      const baseTimer = this.attackCharged ? 24 : 18;
+      const prog = 1 - (this.attackTimer / baseTimer);
+      const maxExt = this.attackCharged ? 28 : 18;
+      const ext  = prog < 0.5 ? prog * maxExt : (1 - prog) * maxExt;
       const fx   = f === 1 ? (cx + this.w + ext) : (cx - 10 - ext);
       const fy   = cy + 12;
 
@@ -295,10 +308,10 @@ class Player {
       ctx.fillRect(armX, cy + 14, 10, 4);
 
       ctx.fillStyle = PAL.punch;
-      ctx.fillRect(fx, fy, 10, 10);
+      ctx.fillRect(fx, fy - (this.attackCharged ? 2 : 0), this.attackCharged ? 14 : 10, this.attackCharged ? 14 : 10);
       ctx.strokeStyle = PAL.punchGlow;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(fx, fy, 10, 10);
+      ctx.lineWidth = this.attackCharged ? 3 : 2;
+      ctx.strokeRect(fx, fy - (this.attackCharged ? 2 : 0), this.attackCharged ? 14 : 10, this.attackCharged ? 14 : 10);
       ctx.lineWidth = 1;
 
       if (this.attackTimer % 3 === 0) {
@@ -308,6 +321,12 @@ class Player {
         );
       }
     } else {
+      if (this.chargeTimer > 0) {
+        ctx.globalAlpha = this.chargeReady ? 0.45 : 0.25;
+        ctx.fillStyle = PAL.punchGlow;
+        ctx.fillRect(cx - 3, cy - 3, this.w + 6, this.h + 6);
+        ctx.globalAlpha = 1;
+      }
       ctx.fillStyle = PAL.punch;
       const hx = f === 1 ? cx + 18 : cx - 4;
       ctx.fillRect(hx, cy + 14, 6, 6);

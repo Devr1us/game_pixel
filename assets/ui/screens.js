@@ -129,7 +129,7 @@ function renderStageSelect() {
 
     card.addEventListener('click', () => {
       if (!unlocked) return;
-      startLevel(i);
+      startLevel(i, { resetRun: true });
     });
 
     grid.appendChild(card);

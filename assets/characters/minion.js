@@ -109,7 +109,7 @@ class Minion {
     // Serang player saat dekat
     // Elite: jangkauan serangan lebih lebar, cooldown lebih pendek
     if (this.attackTimer > 0) { this.attackTimer--; return; }
-    const attackRange = this.isElite ? 36 : 28;
+    const attackRange = this.isElite ? 32 : 24;
     const attackCooldown = this.isElite ? 45 : 60;
     const dx = Math.abs((player.x + player.w / 2) - (this.x + this.w / 2));
     const dy = Math.abs((player.y + player.h / 2) - (this.y + this.h / 2));
@@ -121,10 +121,11 @@ class Minion {
     // Terima serangan player
     const ab = player.attackBox;
     if (ab && player.attacking && this.iframes <= 0 && rectsOverlap(ab, this)) {
-      const dmg = this.isElite ? 15 : 25; // Elite lebih tahan
+      const baseDmg = player.attackDamage || 10;
+      const dmg = this.isElite ? Math.max(15, baseDmg) : Math.max(25, baseDmg);
       this.hp -= dmg;
-      this.iframes = 30;
-      G.score += this.isElite ? 30 : 20;
+      this.iframes = player.attackCharged ? 38 : 30;
+      G.score += player.attackCharged ? (this.isElite ? 60 : 40) : (this.isElite ? 30 : 20);
       updateHUD();
       Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 5, this.eyeCol, 0, -2, 3, 18);
       if (this.hp <= 0) {

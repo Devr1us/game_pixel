@@ -93,8 +93,8 @@ const Camera = {
   // Konversi koordinat world → screen (dengan zoom)
   toScreen(wx, wy) {
     return {
-      x: (wx - this.x) * this.zoom,
-      y: (wy - this.y) * this.zoom,
+      x: wx - this.x,
+      y: wy - this.y,
     };
   },
 
@@ -173,8 +173,7 @@ function drawBackground() {
 
 // ─── DRAW TILEMAP ─────────────────────────────────────────────
 function drawTiles(map) {
-  const z  = Camera.zoom;
-  const ts = TILE * z; // ukuran tile di layar
+  const ts = TILE;
 
   const startCol = Math.max(0, Math.floor(Camera.x / TILE));
   const endCol   = Math.min(map.cols - 1, Math.ceil((Camera.x + Camera.viewW) / TILE));
@@ -184,51 +183,51 @@ function drawTiles(map) {
   for (let r = startRow; r <= endRow; r++) {
     for (let c = startCol; c <= endCol; c++) {
       const t  = map.get(c, r);
-      const sx = (c * TILE - Camera.x) * z;
-      const sy = (r * TILE - Camera.y) * z;
+      const sx = c * TILE - Camera.x;
+      const sy = r * TILE - Camera.y;
 
       if (t === '1') {
         // Grass ground
         ctx.fillStyle = PAL.ground;
-        ctx.fillRect(sx, sy + 6 * z, ts, ts - 6 * z);
+        ctx.fillRect(sx, sy + 6, ts, ts - 6);
         ctx.fillStyle = PAL.groundTop;
-        ctx.fillRect(sx, sy, ts, 7 * z);
+        ctx.fillRect(sx, sy, ts, 7);
         ctx.fillStyle = PAL.groundDark;
-        ctx.fillRect(sx + 2 * z, sy + 8  * z, 3 * z, 3 * z);
-        ctx.fillRect(sx + 10* z, sy + 14 * z, 4 * z, 2 * z);
-        ctx.fillRect(sx + 22* z, sy + 10 * z, 3 * z, 3 * z);
+        ctx.fillRect(sx + 2, sy + 8, 3, 3);
+        ctx.fillRect(sx + 10, sy + 14, 4, 2);
+        ctx.fillRect(sx + 22, sy + 10, 3, 3);
 
       } else if (t === '2') {
         // Platform
         ctx.fillStyle = PAL.platform;
-        ctx.fillRect(sx, sy + 6 * z, ts, ts - 6 * z);
+        ctx.fillRect(sx, sy + 6, ts, ts - 6);
         ctx.fillStyle = PAL.platformTop;
-        ctx.fillRect(sx, sy, ts, 7 * z);
+        ctx.fillRect(sx, sy, ts, 7);
 
       } else if (t === '3') {
         // Stone
         ctx.fillStyle = PAL.stone;
         ctx.fillRect(sx, sy, ts, ts);
         ctx.fillStyle = PAL.stoneDark;
-        ctx.fillRect(sx, sy, ts, 2 * z);
-        ctx.fillRect(sx, sy, 2 * z, ts);
+        ctx.fillRect(sx, sy, ts, 2);
+        ctx.fillRect(sx, sy, 2, ts);
         ctx.fillStyle = PAL.stoneLight;
-        ctx.fillRect(sx + 2  * z, sy + 2  * z, 6 * z, 4 * z);
-        ctx.fillRect(sx + 18 * z, sy + 16 * z, 8 * z, 4 * z);
+        ctx.fillRect(sx + 2, sy + 2, 6, 4);
+        ctx.fillRect(sx + 18, sy + 16, 8, 4);
 
       } else if (t === '7') {
         // Lava (animated)
-        const lavaOff = Math.sin(G.tick * 0.08 + c * 0.5) * 3 * z;
+        const lavaOff = Math.sin(G.tick * 0.08 + c * 0.5) * 3;
         ctx.fillStyle = PAL.lava;
         ctx.fillRect(sx, sy + lavaOff, ts, ts);
         ctx.fillStyle = PAL.lavaGlow;
         ctx.globalAlpha = 0.4 + 0.2 * Math.sin(G.tick * 0.1 + c);
-        ctx.fillRect(sx, sy + lavaOff, ts, 8 * z);
+        ctx.fillRect(sx, sy + lavaOff, ts, 8);
         ctx.globalAlpha = 1;
         if (r > 0 && map.get(c, r - 1) === '0') {
           ctx.globalAlpha = 0.15;
           ctx.fillStyle = PAL.lavaGlow;
-          ctx.fillRect(sx, sy - 12 * z, ts, 12 * z);
+          ctx.fillRect(sx, sy - 12, ts, 12);
           ctx.globalAlpha = 1;
         }
 

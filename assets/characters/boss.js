@@ -155,6 +155,8 @@ class Boss {
     this.phase = 0;
     this.facing = -1;
     this.attackTimer = 0;
+    this.attackWarnTimer = 0;
+    this.pendingAttack = null;
     this.chargeTimer = 0;
     this.chargeDir = 0;
     this.isCharging = false;
@@ -193,7 +195,6 @@ class Boss {
         currentLevel.bossDefeated = true;
         hideBossBar();
         Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 30, PAL.gold, 0, -3, 8, 50);
-        setTimeout(() => nextLevel(), 1200);
       }
       return;
     }
@@ -234,16 +235,37 @@ class Boss {
       this.chargeTimer = 30;
     }
     if (pd.teleRate > 0 && Math.random() < 1 / pd.teleRate) {
-      this.x = player.x + (Math.random() > 0.5 ? 110 : -this.w - 110);
-      Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 15, this.bdef.eye, 0, -2, 5, 30);
+      let newX = player.x + (Math.random() > 0.5 ? 110 : -this.w - 110);
+      newX = Math.max(0, Math.min(map.pixelWidth() - this.w, newX));
+      const probeCol = Math.floor((newX + this.w / 2) / TILE);
+      const probeRow = Math.floor((this.y + this.h) / TILE);
+      if (!map.isSolid(probeCol, probeRow)) {
+        this.x = newX;
+        Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 15, this.bdef.eye, 0, -2, 5, 30);
+      }
     }
 
-    if (this.attackTimer > 0) this.attackTimer--;
-    else { this.attackTimer = pd.attackRate; this._doAttack(player, pd); }
+    if (this.attackWarnTimer > 0) {
+      this.attackWarnTimer--;
+      if (this.attackWarnTimer <= 0 && this.pendingAttack) {
+        this._doAttack(player, this.pendingAttack);
+        this.pendingAttack = null;
+      }
+    } else if (this.attackTimer > 0) {
+      this.attackTimer--;
+    } else {
+      this.attackTimer = pd.attackRate;
+      this.attackWarnTimer = 18;
+      this.pendingAttack = pd;
+      Particles.emit(this.x + this.w / 2, this.y + this.h / 2, 6, this.bdef.eye, 0, -1, 2, 12);
+    }
 
     this.swordAttacks = this.swordAttacks.filter(s => {
       s.x += s.vx; s.y += s.vy; s.vy += 0.3; s.life--;
-      if (s.life > 0 && rectsOverlap(s, player) && player.iframes <= 0) player.takeDamage('sword');
+      if (s.life > 0 && rectsOverlap(s, player) && player.iframes <= 0 && !s.hasHit) {
+        player.takeDamage('sword');
+        s.hasHit = true;
+      }
       return s.life > 0;
     });
 
@@ -252,10 +274,11 @@ class Boss {
 
     const ab = player.attackBox;
     if (ab && player.attacking && this.iframes <= 0 && rectsOverlap(ab, this)) {
-      this.hp -= 10; this.iframes = 20; G.score += 50;
+      const dmg = player.attackDamage || 10;
+      this.hp -= dmg; this.iframes = player.attackCharged ? 42 : 35; G.score += player.attackCharged ? 90 : 50;
       addCombo();
       SFX.bossHit();
-      ScreenShake.trigger(4, 8);
+      ScreenShake.trigger(player.attackCharged ? 8 : 4, player.attackCharged ? 12 : 8);
       updateHUD();
       Particles.emit(this.x + this.w / 2, this.y + 10, 6, PAL.gold, 0, -2, 3, 20);
       updateBossBar(this.hp, this.maxHp);
@@ -280,10 +303,10 @@ class Boss {
     for (let i = 0; i < count; i++) {
       const offset = count === 1 ? 0 : (i - (count - 1) / 2) * spread;
       this.swordAttacks.push({
-        x: cx - 8, y: cy - 4, w: 20 - i * 1, h: 8,
+        x: cx - 8, y: cy - 4, w: 20, h: 8,
         vx: Math.cos(ang + offset) * spd,
         vy: Math.sin(ang + offset) * spd,
-        life: 130, color: this.bdef.swordColor, angle: ang + offset
+        life: 130, color: this.bdef.swordColor, angle: ang + offset, hasHit: false
       });
     }
   }
@@ -371,6 +394,16 @@ class Boss {
       ctx.fillStyle = this.bdef.eye;
       ctx.fillRect(cx - 4, cy - 4, W + 8, H + 8);
       ctx.globalAlpha = 1;
+    }
+
+    if (this.attackWarnTimer > 0) {
+      const pulse = 0.35 + 0.25 * Math.sin(G.tick * 0.5);
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = this.bdef.eye;
+      ctx.fillRect(cx - 6, cy - 6, W + 12, H + 12);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(eyeX - 2, cy + 8, 9, 9);
     }
 
     this.swordAttacks.forEach(s => {

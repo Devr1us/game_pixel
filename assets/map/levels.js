@@ -179,6 +179,7 @@ function makeStageObjects(width, stageNum) {
   objs.push({ type: 'mplatform', x: Math.floor(width * 0.58), y: 7, range: mpRange2, speed: mpSpeed2 });
 
   // Boss gate + portal
+  objs.push({ type: 'chest', x: Math.floor(width * 0.46), y: 8 });
   objs.push({ type: 'bossgate', x: width - 11, y: floorRow - 1 });
   objs.push({ type: 'portal',   x: width - 3,  y: floorRow - 1 });
 
@@ -273,6 +274,7 @@ const BASE_LEVELS = [
       { type: 'hspike', x: 25, y: 7 }, { type: 'hspike', x: 26, y: 7 },
       { type: 'hspike', x: 38, y: 7 }, { type: 'hspike', x: 39, y: 7 },
       { type: 'checkpoint', x: 24, y: 9 }, { type: 'checkpoint', x: 40, y: 9 },
+      { type: 'chest', x: 36, y: 8 },
       { type: 'mplatform', x: 33, y: 8, range: 3, speed: 1.2 },
       { type: 'mplatform', x: 50, y: 7, range: 2, speed: 1.8 },
       { type: 'saw', x: 18, y: 10, range: 5, speed: 1.5, axis: 'x' },
@@ -336,6 +338,7 @@ const BASE_LEVELS = [
       // dan jauh dari saw (x:16, x:35, x:50)
       // CP1: x:7 (sebelum spike pertama), CP2: x:30 (antara spike x:25 dan x:38, area bersih)
       { type: 'checkpoint', x: 7,  y: 10 }, { type: 'checkpoint', x: 30, y: 10 },
+      { type: 'chest', x: 44, y: 8 },
       { type: 'mplatform', x: 26, y: 9, range: 3, speed: 1.5 },
       { type: 'mplatform', x: 48, y: 8, range: 3, speed: 2   },
       { type: 'mplatform', x: 59, y: 7, range: 2, speed: 2.5 },
@@ -405,6 +408,7 @@ const BASE_LEVELS = [
       // dan jauh dari saw (x:8, x:27, x:40, x:58)
       // CP1: x:16 (antara spike x:11 dan x:22, area bersih), CP2: x:43 (antara spike x:37 dan x:48)
       { type: 'checkpoint', x: 16, y: 10 }, { type: 'checkpoint', x: 43, y: 10 },
+      { type: 'chest', x: 53, y: 8 },
       { type: 'mplatform', x: 15, y: 10, range: 3, speed: 2   },
       { type: 'mplatform', x: 32, y: 9,  range: 2, speed: 2.5 },
       { type: 'mplatform', x: 55, y: 8,  range: 3, speed: 3   },
@@ -426,3 +430,15 @@ const BASE_LEVELS = [
 
 // ─── ALL LEVELS (1–10) ───────────────────────────────────────
 const LEVELS = [...BASE_LEVELS, ...generateExtraLevels(4, 10)];
+
+function normalizeLevelRows(levels) {
+  levels.forEach(level => {
+    level.data = level.data.map(row => {
+      if (row.length === level.width) return row;
+      if (row.length > level.width) return row.slice(0, level.width);
+      return row.padEnd(level.width, '0');
+    });
+  });
+}
+
+normalizeLevelRows(LEVELS);

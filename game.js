@@ -173,6 +173,7 @@ let G = {
   // Combo system
   combo: 0,
   comboTimer: 0,
+  runActive: false,
   // High score
   highScore: parseInt(localStorage.getItem('tpg_highscore') || '0', 10),
 };
@@ -344,6 +345,7 @@ function initLevel(levelIdx) {
   const mplatforms  = [];
   const checkpoints = [];
   const minions     = [];
+  const chests      = [];
   let   bossgate    = null;
   let   portal      = null;
   const boss        = new Boss(BOSS_DEFS[def.boss.id], levelIdx);
@@ -357,6 +359,7 @@ function initLevel(levelIdx) {
       case 'saw':          saws.push(new Saw(o.x, o.y, o.range, o.speed, o.axis)); break;
       case 'mplatform':    mplatforms.push(new MovingPlatform(o.x, o.y, o.range, o.speed)); break;
       case 'checkpoint':   checkpoints.push(new Checkpoint(o.x, o.y)); break;
+      case 'chest':        chests.push(new TreasureChest(o.x, o.y)); break;
       case 'minion':       minions.push(new Minion(o.x, o.y, o.speed, o.hp)); break;
       case 'bossgate':     bossgate = new BossGate(o.x, o.y); break;
       case 'portal':       portal   = new Portal(o.x, o.y); break;
@@ -366,8 +369,9 @@ function initLevel(levelIdx) {
   currentLevel = {
     def, map,
     coins, spikes, hspikes, fspikes, saws,
-    mplatforms, checkpoints, minions, bossgate, portal, boss,
+    mplatforms, checkpoints, minions, chests, bossgate, portal, boss,
     bossDefeated: false,
+    levelComplete: false,
     elapsedMs: 0,
     coinTotal: coins.length,
     startLives: G.lives,
@@ -436,6 +440,7 @@ function updateGame(dt) {
   Camera.follow(player.x + player.w / 2, player.y + player.h / 2);
 
   cl.coins.forEach(c => c.update(player));
+  cl.chests.forEach(c => c.update(player));
 
   if (!player.dead) {
     cl.spikes.forEach(s  => s.update(player));
@@ -463,6 +468,7 @@ function drawObjects() {
   const cl = currentLevel;
   cl.mplatforms.forEach(mp => mp.draw());
   cl.coins.forEach(c => c.draw());
+  cl.chests.forEach(c => c.draw());
   cl.spikes.forEach(s => s.draw());
   cl.hspikes.forEach(s => s.draw());
   cl.fspikes.forEach(s => s.draw());
@@ -480,6 +486,8 @@ function drawPaused() {
 
 // ─── LEVEL TRANSITIONS ───────────────────────────────────────
 function nextLevel() {
+  if (!currentLevel || currentLevel.levelComplete) return;
+  currentLevel.levelComplete = true;
   const stars  = computeLevelStars();
   const p      = loadProgress();
   p.bestStars[G.currentLevel] = Math.max(p.bestStars[G.currentLevel] || 0, stars.total);
@@ -513,14 +521,20 @@ function nextLevel() {
   }
 }
 
-function startLevel(idx) {
+function startLevel(idx, options = {}) {
+  const resetLives = options.resetLives !== false;
+  const resetRun = options.resetRun === true;
   cancelAnimationFrame(animId);
   G.running = false;
   G.paused  = false;
   document.getElementById('pause-overlay').classList.add('hidden');
   Particles.pool = [];
-  // Reset nyawa ke 3 setiap kali mulai stage baru (dari stage select, retry, atau next level)
-  G.lives = 3;
+  if (resetRun) {
+    G.score = 0;
+    G.coins = 0;
+    G.runActive = true;
+  }
+  if (resetLives) G.lives = 3;
   resetCombo();
   initLevel(idx);
   showScreen('game');
@@ -533,7 +547,8 @@ function startGame() {
   G.lives = 3;
   G.score = 0;
   G.coins = 0;
-  startLevel(0);
+  G.runActive = true;
+  startLevel(0, { resetLives: false });
 }
 
 // ─── INPUT ───────────────────────────────────────────────────
@@ -649,10 +664,7 @@ function _bindUIAndBoot() {
   });
 
   document.getElementById('btn-retry').addEventListener('click', () => {
-    G.lives = 3;
-    G.score = 0;
-    G.coins = 0;
-    startLevel(G.currentLevel);
+    startLevel(G.currentLevel, { resetRun: true });
   });
   document.getElementById('btn-go-menu').addEventListener('click', () => {
     G.running = false;
@@ -663,16 +675,16 @@ function _bindUIAndBoot() {
   document.getElementById('btn-nextlevel').addEventListener('click', () => {
     const stars = computeLevelStars();
     if (stars.total < UNLOCK_STARS_REQUIRED) {
-      startLevel(G.currentLevel);
+      startLevel(G.currentLevel, { resetRun: true });
     } else {
-      startLevel(G.currentLevel + 1);
+      startLevel(G.currentLevel + 1, { resetLives: false });
     }
   });
 
   document.getElementById('btn-pause-retry').addEventListener('click', () => {
     G.paused = false;
     document.getElementById('pause-overlay').classList.add('hidden');
-    startLevel(G.currentLevel);
+    startLevel(G.currentLevel, { resetRun: true });
   });
 
   document.getElementById('btn-stage-select').addEventListener('click', () => showScreen('stages'));

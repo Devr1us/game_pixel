@@ -158,6 +158,53 @@ class Checkpoint {
 
 // ─── BOSS GATE ───────────────────────────────────────────────
 // Zona pemicu boss fight — saat player menyentuhnya, boss aktif
+// Chest bonus untuk memberi alasan eksplorasi di tiap stage.
+class TreasureChest {
+  constructor(x, y) {
+    this.x = x * TILE + 2;
+    this.y = y * TILE - 18;
+    this.w = 28;
+    this.h = 18;
+    this.opened = false;
+    this.anim = 0;
+  }
+
+  update(player) {
+    this.anim++;
+    if (this.opened) return;
+    const ab = player.attackBox;
+    if (ab && player.attacking && rectsOverlap(ab, this)) {
+      this.opened = true;
+      G.score += 250;
+      G.coins += 3;
+      SFX.coin();
+      updateHUD();
+      Particles.emit(this.x + this.w / 2, this.y, 18, PAL.gold, 0, -3, 4, 35);
+    }
+  }
+
+  draw() {
+    const sc = Camera.toScreen(this.x, this.y);
+    const glow = this.opened ? 0.18 : 0.08 + 0.08 * Math.sin(this.anim * 0.08);
+    ctx.globalAlpha = glow;
+    ctx.fillStyle = PAL.gold;
+    ctx.fillRect(sc.x - 4, sc.y - 6, this.w + 8, this.h + 10);
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = this.opened ? '#6a4a2a' : PAL.platform;
+    ctx.fillRect(sc.x, sc.y + 6, this.w, 12);
+    ctx.fillStyle = this.opened ? PAL.goldDark : PAL.gold;
+    ctx.fillRect(sc.x + 2, sc.y, this.w - 4, 8);
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(sc.x + 11, sc.y + 7, 6, 7);
+    if (this.opened) {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(sc.x + 6, sc.y - 4, 4, 4);
+      ctx.fillRect(sc.x + 18, sc.y - 7, 3, 3);
+    }
+  }
+}
+
 class BossGate {
   constructor(x, y) {
     this.x = x * TILE;
